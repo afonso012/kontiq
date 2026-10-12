@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { api, type ResumoPainel, type ResumoPortal } from '../api'
-import { Marca } from '../components/ui'
+import { api, type ResumoPortal } from '../api'
 import { useSessao } from '../sessao'
 
 const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro']
@@ -15,38 +14,6 @@ function useSair() {
     definir(null)
     nav(para, { replace: true })
   }
-}
-
-/** Painel provisório do gabinete: prova que a sessão e o isolamento funcionam. */
-export function Painel() {
-  const [r, setR] = useState<ResumoPainel | null>(null)
-  const sair = useSair()
-  useEffect(() => { api.resumoPainel().then(setR).catch(() => {}) }, [])
-  return (
-    <div className="app">
-      <header className="app__topo">
-        <Marca />
-        <div className="app__conta">
-          <span className="muted14">{r?.utilizador.nome}</span>
-          <button className="pf-btn pf-btn--sm" onClick={() => sair('/entrar')}>Sair</button>
-        </div>
-      </header>
-      <main className="app__conteudo">
-        <span className="muted14">{r?.gabinete.nome}</span>
-        <h1 className="app__titulo">Olá, {r?.utilizador.nome.split(' ')[0] ?? '…'}</h1>
-        <div className="stats">
-          <div className="pf-stat pf-stat--brand"><div className="pf-stat__label">Empresas-cliente</div><div className="pf-stat__value">{r?.empresas ?? '–'}</div><div className="pf-stat__sub">no gabinete</div></div>
-          <div className="pf-stat"><div className="pf-stat__label">Faturas de {r ? mesPorExtenso(r.mes) : '…'}</div><div className="pf-stat__value">{r?.faturas_mes ?? '–'}</div><div className="pf-stat__sub">recebidas este mês</div></div>
-          <div className="pf-stat"><div className="pf-stat__label">Equipa</div><div className="pf-stat__value">{r?.membros ?? '–'}</div><div className="pf-stat__sub">com acesso</div></div>
-        </div>
-        <div className="pf-card vazio pf-glow">
-          <span className="pf-pill pf-pill--new">Em construção</span>
-          <h2>O painel de clientes vem a seguir</h2>
-          <p className="muted15">A conta e a sessão já funcionam. O próximo passo é a lista de empresas com o estado do mês.</p>
-        </div>
-      </main>
-    </div>
-  )
 }
 
 /** Início provisório do portal do cliente. */

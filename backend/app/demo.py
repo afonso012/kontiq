@@ -51,7 +51,17 @@ FATURAS_QR = [
 def semear() -> str:
     gid = _semear_gabinete()
     _semear_contas(gid)
+    _contacto_faroleiro(gid)
     return gid
+
+
+def _contacto_faroleiro(gid) -> None:
+    """O contacto do Faroleiro é o cliente de demonstração do portal."""
+    nome, email, tel = DEMO_CLIENTE
+    with sessao_gabinete(gid) as s:
+        e = s.scalar(select(Empresa).where(Empresa.nif == EMPRESAS[0][1]))
+        if e and not e.telefone:
+            e.contacto_nome, e.telefone, e.email = nome, tel, email
 
 
 def _semear_contas(gid) -> None:

@@ -4,18 +4,12 @@ import { api, ErroApi } from '../api'
 import { AsideGabinete, AsideRegisto, AuthLayout } from '../components/layout'
 import { Aviso, BotaoSeta, BotoesSociais, Campo, IndicadorForca, Passos } from '../components/ui'
 import { useSessao } from '../sessao'
+import { nifValido } from '../util'
 
 const PROGRAMAS = [['toconline', 'TOConline'], ['primavera', 'Primavera'], ['phc', 'PHC'], ['sage', 'Sage'], ['outro', 'Outro']] as const
 const DIMENSOES = [['ate_20', 'Até 20'], ['21_50', '21–50'], ['51_150', '51–150'], ['mais_150', 'Mais de 150']] as const
 
 type Erros = Record<string, string>
-
-function nifValido(nif: string) {
-  if (!/^([123568]\d|45|7[0124579]|9[0189])\d{7}$/.test(nif)) return false
-  const soma = [...nif.slice(0, 8)].reduce((s, d, i) => s + Number(d) * (9 - i), 0)
-  const resto = soma % 11
-  return Number(nif[8]) === (resto < 2 ? 0 : 11 - resto)
-}
 
 export default function Registo() {
   const { definir } = useSessao()

@@ -35,7 +35,7 @@ TIPOS_TAXA = ("isenta", "reduzida", "intermedia", "normal", "nao_sujeita")
 
 NIVEIS_PROBLEMA = ("erro", "aviso")
 ESTADOS_PERIODO = ("aberto", "em_revisao", "fechado")
-CANAIS_PEDIDO = ("email", "whatsapp", "portal")
+CANAIS_PEDIDO = ("email", "sms", "whatsapp", "portal")
 ESTADOS_PEDIDO = ("rascunho", "enviado", "respondido")
 FORMATOS_EXPORTACAO = ("csv", "xlsx", "zip", "toconline", "primavera", "phc", "sage")
 ESTADOS_SUBSCRICAO = ("teste", "ativa", "em_atraso", "cancelada")

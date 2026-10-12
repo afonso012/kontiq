@@ -13,7 +13,7 @@ export class ErroApi extends Error {
   }
 }
 
-async function pedido<T>(metodo: 'GET' | 'POST', caminho: string, corpo?: unknown): Promise<T> {
+async function pedido<T>(metodo: 'GET' | 'POST' | 'PUT', caminho: string, corpo?: unknown): Promise<T> {
   let r: Response
   try {
     r = await fetch(caminho, {
@@ -51,6 +51,35 @@ export const api = {
     pedido<Eu>('POST', '/api/portal/entrar', { canal, destino, codigo }),
   resumoPainel: () => pedido<ResumoPainel>('GET', '/api/painel/resumo'),
   resumoPortal: () => pedido<ResumoPortal>('GET', '/api/portal/resumo'),
+  painel: (periodo: string) => pedido<Painel>('GET', `/api/painel?periodo=${encodeURIComponent(periodo)}`),
+  criarEmpresa: (dados: DadosEmpresa) => pedido<{ id: string; nome: string }>('POST', '/api/empresas', dados),
+  editarEmpresa: (id: string, dados: DadosEmpresa) => pedido<{ id: string; nome: string }>('PUT', `/api/empresas/${id}`, dados),
+  convidar: (id: string) => pedido<{ canal: 'sms' | 'email' }>('POST', `/api/empresas/${id}/convite`),
+  pedirFaturas: (id: string, periodo: string) => pedido<{ canal: 'sms' | 'email' }>('POST', `/api/empresas/${id}/pedir-faturas`, { periodo }),
+}
+
+export type Estado = 'bad' | 'warn' | 'ok' | 'none'
+
+export type EmpresaPainel = {
+  id: string; nome: string; nif: string; estado: Estado
+  faturas: number; total: number; total_txt: string; conferidas: number; por_conferir: number; com_erro: number
+  ultima: string; pedido_em: string | null; portal: boolean; periodicidade_iva: string
+  contacto: { nome: string | null; telefone: string | null; email: string | null }
+}
+
+export type Painel = {
+  periodo: string; periodo_txt: string
+  gabinete: { nome: string; programa: string | null }
+  totais: { total: number; total_txt: string; faturas: number; empresas: number; conferidas: number; por_conferir: number
+    ia_por_conferir: number; problemas: number; problemas_txt: string; pct_conferido: number }
+  atencao: { nivel: 'bad' | 'warn'; empresa_id: string; empresa: string; codigo: string; titulo: string; detalhe: string; pedido?: boolean }[]
+  empresas: EmpresaPainel[]
+  onboarding: { empresas: boolean; portal: boolean }
+}
+
+export type DadosEmpresa = {
+  nif: string; nome: string; periodicidade_iva: string
+  contacto_nome: string | null; telefone: string | null; email: string | null; convidar: boolean
 }
 
 export type ResumoPainel = {
