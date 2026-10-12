@@ -16,6 +16,12 @@ compras das empresas-cliente, lê-as (código QR da AT ou IA), valida, classific
 
 ## Arrancar em local
 
+**Forma mais simples:** no Finder, duplo clique em `scripts/arrancar.command`. Instala o que falta
+(Python, PostgreSQL via Docker ou Homebrew), cria as tabelas e os dados de demonstração, corre os
+testes e abre a API em http://localhost:8000/docs.
+
+**Passo a passo (alternativa):**
+
 ```bash
 cd ~/Projetos/faturas-em-dia
 cp .env.example .env
@@ -44,5 +50,6 @@ uvicorn app.main:app --reload
 ## Estado
 Fase 0 (fundações) concluída: modelo de dados com 20 tabelas, isolamento entre
 gabinetes por Row Level Security, dados base SNC, validação de NIF e leitura do
-QR da AT — 23 testes a passar. Próximo passo: autenticação e API do gabinete
+QR da AT — 23 testes a passar. Inclui dados de demonstração (`python -m app.demo`) e endpoints de
+demonstração sem autenticação, só para uso local. Próximo passo: autenticação e API do gabinete
 (ver [roadmap](docs/04-roadmap.md)).
