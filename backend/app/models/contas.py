@@ -26,6 +26,8 @@ class Gabinete(ComId, ComDatas, Base):
     __table_args__ = (
         CheckConstraint(f"plano IN ({opcoes(*E.PLANOS)})", name="plano"),
         CheckConstraint(f"estado IN ({opcoes(*E.ESTADOS_GABINETE)})", name="estado"),
+        CheckConstraint(f"programa_contabilidade IN ({opcoes(*E.PROGRAMAS_CONTABILIDADE)})", name="programa"),
+        CheckConstraint(f"dimensao IN ({opcoes(*E.DIMENSOES_GABINETE)})", name="dimensao"),
     )
 
     nome: Mapped[str] = mapped_column(String(200))
@@ -34,6 +36,8 @@ class Gabinete(ComId, ComDatas, Base):
     telefone: Mapped[str | None] = mapped_column(String(30))
     plano: Mapped[str] = mapped_column(String(20), server_default="arranque")
     estado: Mapped[str] = mapped_column(String(20), server_default="ativo")
+    programa_contabilidade: Mapped[str | None] = mapped_column(String(20))
+    dimensao: Mapped[str | None] = mapped_column(String(20))
 
     membros: Mapped[list["MembroGabinete"]] = relationship(back_populates="gabinete")
 
@@ -42,10 +46,16 @@ class Utilizador(ComId, ComDatas, Base):
     """Qualquer pessoa que entra na plataforma: contabilista ou cliente."""
 
     __tablename__ = "utilizadores"
-    __table_args__ = (Index("uq_utilizadores_email_lower", func.lower(text("email")), unique=True),)
+    __table_args__ = (
+        Index("uq_utilizadores_email_lower", func.lower(text("email")), unique=True),
+        Index("uq_utilizadores_telefone", "telefone", unique=True, postgresql_where=text("telefone IS NOT NULL")),
+    )
 
     email: Mapped[str] = mapped_column(String(254))
     nome: Mapped[str] = mapped_column(String(200))
+    # Formato E.164 sem espaços: +351912345678. Usado para entrar no portal por SMS.
+    telefone: Mapped[str | None] = mapped_column(String(20))
+    email_confirmado_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # Pode ficar vazio se a pessoa só entrar por link mágico enviado por email.
     password_hash: Mapped[str | None] = mapped_column(String(255))
     ativo: Mapped[bool] = mapped_column(Boolean, server_default=text("true"))
@@ -126,3 +136,58 @@ class Subscricao(ComId, ComDatas, Base):
     fornecedor_pagamento: Mapped[str | None] = mapped_column(String(30))
     referencia_externa: Mapped[str | None] = mapped_column(String(120))
     notas: Mapped[str | None] = mapped_column(Text)
+
+
+class Sessao(ComId, Base):
+    """Sessão iniciada (cookie). Guardamos só o hash do token."""
+
+    __tablename__ = "sessoes"
+    __table_args__ = (
+        CheckConstraint(f"tipo IN ({opcoes(*E.TIPOS_SESSAO)})", name="tipo"),
+        CheckConstraint("(tipo = 'portal') = (empresa_id IS NOT NULL)", name="empresa_so_no_portal"),
+    )
+
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    utilizador_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("utilizadores.id", ondelete="CASCADE"), index=True)
+    tipo: Mapped[str] = mapped_column(String(10))
+    gabinete_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("gabinetes.id", ondelete="CASCADE"))
+    empresa_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("empresas.id", ondelete="CASCADE"))
+    expira_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    terminada_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    ultimo_uso: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    user_agent: Mapped[str | None] = mapped_column(String(300))
+    ip: Mapped[str | None] = mapped_column(String(64))
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class CodigoVerificacao(ComId, Base):
+    """Código de 6 dígitos enviado por email ou SMS. Guardamos só o hash."""
+
+    __tablename__ = "codigos_verificacao"
+    __table_args__ = (
+        CheckConstraint(f"finalidade IN ({opcoes(*E.FINALIDADES_CODIGO)})", name="finalidade"),
+        CheckConstraint(f"canal IN ({opcoes(*E.CANAIS_CODIGO)})", name="canal"),
+        Index("ix_codigos_verificacao_destino", "destino", "finalidade", "criado_em"),
+    )
+
+    utilizador_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("utilizadores.id", ondelete="CASCADE"), index=True)
+    finalidade: Mapped[str] = mapped_column(String(20))
+    canal: Mapped[str] = mapped_column(String(10))
+    destino: Mapped[str] = mapped_column(String(254))
+    codigo_hash: Mapped[str] = mapped_column(String(64))
+    tentativas: Mapped[int] = mapped_column(Integer, server_default=text("0"))
+    expira_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    usado_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class TentativaLogin(ComId, Base):
+    """Tentativas de entrada, para travar quem tenta adivinhar palavras-passe ou códigos."""
+
+    __tablename__ = "tentativas_login"
+    __table_args__ = (Index("ix_tentativas_login_chave", "chave", "criado_em"),)
+
+    # "email:<email>", "ip:<ip>" ou "portal:<destino>".
+    chave: Mapped[str] = mapped_column(String(300))
+    sucesso: Mapped[bool] = mapped_column(Boolean)
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

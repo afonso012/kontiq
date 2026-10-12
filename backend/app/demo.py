@@ -11,13 +11,19 @@ from decimal import Decimal
 from sqlalchemy import select
 
 from .core.db import sessao_gabinete, sessao_sem_gabinete
+from .core.seguranca import hash_password
 from .domain.qr_at import ler_qr
 from .domain.validacao import validar
 from .models import (
-    Categoria, Empresa, Fatura, Fornecedor, Gabinete, LinhaIVA, ProblemaFatura, RegraFornecedor,
+    AcessoPortal, Categoria, Empresa, Fatura, Fornecedor, Gabinete, LinhaIVA, MembroGabinete,
+    ProblemaFatura, RegraFornecedor, Utilizador,
 )
 
 NIF_GABINETE_DEMO = "502877642"
+
+# Contas de demonstração (só em desenvolvimento).
+DEMO_CONTABILISTA = ("Marta Ferreira", "demo@faturas.local", "demonstracao-2026")
+DEMO_CLIENTE = ("Joaquim Faroleiro", "joaquim@faroleiro.local", "+351912345678")
 
 EMPRESAS = [
     ("Restaurante O Faroleiro, Lda", "512173850", "Sr. Joaquim"),
@@ -43,11 +49,39 @@ FATURAS_QR = [
 
 
 def semear() -> str:
+    gid = _semear_gabinete()
+    _semear_contas(gid)
+    return gid
+
+
+def _semear_contas(gid) -> None:
+    """Contabilista (entra com email e palavra-passe) e cliente do portal (entra por código)."""
+    from datetime import datetime, timezone
+    agora = datetime.now(timezone.utc)
+    with sessao_sem_gabinete() as s:
+        nome, email, password = DEMO_CONTABILISTA
+        u = s.scalar(select(Utilizador).where(Utilizador.email == email))
+        if not u:
+            u = Utilizador(nome=nome, email=email, password_hash=hash_password(password), email_confirmado_em=agora)
+            s.add(u); s.flush()
+            s.add(MembroGabinete(gabinete_id=gid, utilizador_id=u.id, papel="dono"))
+        nome, email, tel = DEMO_CLIENTE
+        c = s.scalar(select(Utilizador).where(Utilizador.email == email))
+        if not c:
+            c = Utilizador(nome=nome, email=email, telefone=tel, email_confirmado_em=agora)
+            s.add(c); s.flush()
+            with sessao_gabinete(gid) as sg:  # empresas têm RLS: ler dentro do gabinete
+                empresa_id = sg.scalar(select(Empresa.id).where(Empresa.nif == EMPRESAS[0][1]))
+            s.add(AcessoPortal(gabinete_id=gid, empresa_id=empresa_id, utilizador_id=c.id, papel="gestor"))
+
+
+def _semear_gabinete() -> str:
     with sessao_sem_gabinete() as s:
         g = s.scalar(select(Gabinete).where(Gabinete.nif == NIF_GABINETE_DEMO))
         if g:
             return str(g.id)
-        g = Gabinete(nome="Gabinete Demo — Contabilidade Sado", nif=NIF_GABINETE_DEMO, plano="gabinete")
+        g = Gabinete(nome="Contabilidade Sado (demo)", nif=NIF_GABINETE_DEMO, plano="gabinete",
+                     programa_contabilidade="toconline", dimensao="21_50")
         s.add(g); s.flush()
         gid = g.id
 

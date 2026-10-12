@@ -1,6 +1,9 @@
 """Todos os modelos, importados num só sítio para o Alembic os encontrar."""
 from .base import Base
-from .contas import AcessoPortal, Convite, Gabinete, MembroGabinete, Subscricao, Utilizador
+from .contas import (
+    AcessoPortal, CodigoVerificacao, Convite, Gabinete, MembroGabinete, Sessao, Subscricao,
+    TentativaLogin, Utilizador,
+)
 from .empresas import Categoria, ContaSNC, Empresa, Fornecedor, RegraFornecedor
 from .faturas import Comentario, Documento, Fatura, LinhaIVA, ProblemaFatura
 from .operacao import Exportacao, PedidoDocumentos, Periodo, RegistoAtividade
@@ -18,6 +21,7 @@ TABELAS_PARTILHADAS = ("plano_contas", "categorias")
 
 __all__ = [
     "Base", "Gabinete", "Utilizador", "MembroGabinete", "AcessoPortal", "Convite", "Subscricao",
+    "Sessao", "CodigoVerificacao", "TentativaLogin",
     "Empresa", "Fornecedor", "ContaSNC", "Categoria", "RegraFornecedor",
     "Documento", "Fatura", "LinhaIVA", "ProblemaFatura", "Comentario",
     "Periodo", "PedidoDocumentos", "Exportacao", "RegistoAtividade",

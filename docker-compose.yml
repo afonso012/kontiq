@@ -29,6 +29,12 @@ services:
     volumes:
       - miniodata:/data
 
+  mailpit:                            # caixa de correio de teste: http://localhost:8025
+    image: axllent/mailpit:v1.24
+    ports:
+      - "1025:1025"                   # SMTP
+      - "8025:8025"                   # página web
+
 volumes:
   pgdata:
   miniodata:

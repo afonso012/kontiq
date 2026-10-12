@@ -39,3 +39,10 @@ CANAIS_PEDIDO = ("email", "whatsapp", "portal")
 ESTADOS_PEDIDO = ("rascunho", "enviado", "respondido")
 FORMATOS_EXPORTACAO = ("csv", "xlsx", "zip", "toconline", "primavera", "phc", "sage")
 ESTADOS_SUBSCRICAO = ("teste", "ativa", "em_atraso", "cancelada")
+
+# Autenticação
+PROGRAMAS_CONTABILIDADE = ("toconline", "primavera", "phc", "sage", "outro")
+DIMENSOES_GABINETE = ("ate_20", "21_50", "51_150", "mais_150")
+TIPOS_SESSAO = ("gabinete", "portal")
+FINALIDADES_CODIGO = ("confirmar_email", "repor_password", "entrar_portal")
+CANAIS_CODIGO = ("email", "sms")

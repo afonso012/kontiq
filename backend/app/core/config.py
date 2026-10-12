@@ -25,6 +25,22 @@ class Settings(BaseSettings):
 
     secret_key: str = "mudar-em-producao"
 
+    # Endereço público da aplicação (links nos emails).
+    url_publica: str = "http://localhost:8000"
+    # Envio de email. Em desenvolvimento: Mailpit (caixa de correio de teste em http://localhost:8025).
+    smtp_host: str = "localhost"
+    smtp_port: int = 1025
+    smtp_utilizador: str = ""
+    smtp_password: str = ""
+    smtp_tls: bool = False
+    email_remetente: str = "Plataforma de Faturas <nao-responder@faturas.local>"
+    # SMS: em desenvolvimento não se envia nada; a mensagem aparece no Mailpit e no terminal.
+    sms_modo: str = "simulado"
+
+    @property
+    def producao(self) -> bool:
+        return self.ambiente == "producao"
+
 
 @lru_cache
 def get_settings() -> Settings:

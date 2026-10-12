@@ -1,32 +1,59 @@
-"""API do Faturas em Dia.
+"""API da plataforma e servidor da aplicação web.
 
-Fase 0: endpoints de demonstração SEM autenticação, só para uso local.
-O gabinete vai no URL; na fase 1 passa a vir do login.
+- /api/auth, /api/portal, /api/painel: autenticação e áreas com sessão.
+- /ferramentas: utilitários sem base de dados.
+- /demo e /gabinetes/{id}/…: demonstração SEM autenticação (só fora de produção).
+- Tudo o resto: a aplicação web (frontend/dist), se tiver sido construída.
 """
+import logging
 import uuid
 from datetime import date
+from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import RedirectResponse
+from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from pydantic import BaseModel
 from sqlalchemy import case, func, select, text
 
+from .api.auth import portal as portal_router
+from .api.auth import router as auth_router
+from .api.painel import router as painel_router
+from .auth.servico import ErroAuth
+from .core.config import get_settings
 from .core.db import engine, sessao_gabinete, sessao_sem_gabinete
 from .domain.nif import nif_valido
 from .domain.qr_at import QRInvalido, ler_qr
 from .domain.validacao import validar
 from .models import Empresa, Fatura, Fornecedor, Gabinete, ProblemaFatura
 
+logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+
 app = FastAPI(
-    title="Faturas em Dia",
-    version="0.1.0",
-    description="API da plataforma. **Fase 0 — demonstração local, sem autenticação.**",
+    title="Plataforma de Faturas",
+    version="0.2.0",
+    description="API da plataforma. Os endpoints de demonstração não têm autenticação e só existem fora de produção.",
 )
+app.include_router(auth_router)
+app.include_router(portal_router)
+app.include_router(painel_router)
+
+FRONTEND = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 
 
-@app.get("/", include_in_schema=False)
-def inicio():
-    return RedirectResponse("/docs")
+@app.exception_handler(ErroAuth)
+def erro_auth(_: Request, e: ErroAuth) -> JSONResponse:
+    return JSONResponse({"codigo": e.codigo, "mensagem": e.mensagem, "campo": e.campo}, status_code=e.status)
+
+
+@app.middleware("http")
+async def cabecalhos_seguranca(request: Request, call_next):
+    resposta = await call_next(request)
+    resposta.headers.setdefault("X-Content-Type-Options", "nosniff")
+    resposta.headers.setdefault("X-Frame-Options", "DENY")
+    resposta.headers.setdefault("Referrer-Policy", "same-origin")
+    if request.url.path.startswith("/api/"):
+        resposta.headers.setdefault("Cache-Control", "no-store")
+    return resposta
 
 
 @app.get("/saude", tags=["Sistema"])
@@ -76,8 +103,14 @@ def validar_nif(nif: str) -> dict:
 
 # ---------------- Gabinete (demonstração) ----------------
 
+def _so_desenvolvimento() -> None:
+    if get_settings().producao:
+        raise HTTPException(404)
+
+
 @app.get("/demo/gabinete", tags=["Demonstração"])
 def gabinete_demo() -> dict:
+    _so_desenvolvimento()
     """Devolve o id do gabinete de demonstração (criado pelo `python -m app.demo`)."""
     with sessao_sem_gabinete() as s:
         g = s.scalar(select(Gabinete).where(Gabinete.nif == "502877642"))
@@ -92,6 +125,7 @@ def estado_clientes(gabinete_id: uuid.UUID, periodo: date = Query(date(2026, 10,
 
     Só devolve dados do gabinete indicado: o isolamento é feito pelo PostgreSQL (RLS).
     """
+    _so_desenvolvimento()
     mes = periodo.replace(day=1)
     with sessao_gabinete(gabinete_id) as s:
         abertos = (select(ProblemaFatura.fatura_id, func.count().label("n"))
@@ -120,6 +154,7 @@ def estado_clientes(gabinete_id: uuid.UUID, periodo: date = Query(date(2026, 10,
 def faturas_empresa(gabinete_id: uuid.UUID, empresa_id: uuid.UUID,
                     periodo: date = Query(date(2026, 10, 1), description="Qualquer dia do mês")) -> list[dict]:
     """Faturas de uma empresa num mês, com fornecedor, classificação e problemas."""
+    _so_desenvolvimento()
     mes = periodo.replace(day=1)
     with sessao_gabinete(gabinete_id) as s:
         faturas = s.scalars(
@@ -134,3 +169,19 @@ def faturas_empresa(gabinete_id: uuid.UUID, empresa_id: uuid.UUID,
             "estado": f.estado, "notas": f.notas,
             "problemas": [{"nivel": p.nivel, "mensagem": p.mensagem} for p in f.problemas if not p.resolvido],
         } for f in faturas]
+
+
+# ---------------- Aplicação web ----------------
+
+@app.get("/{caminho:path}", include_in_schema=False)
+def aplicacao_web(caminho: str):
+    """Serve o frontend construído; qualquer rota desconhecida devolve o index.html (SPA)."""
+    if caminho.startswith(("api/", "docs", "openapi.json", "redoc")):
+        raise HTTPException(404)
+    if not FRONTEND.exists():
+        return RedirectResponse("/docs")
+    ficheiro = (FRONTEND / caminho).resolve()
+    if caminho and ficheiro.is_file() and FRONTEND in ficheiro.parents:
+        cache = "public, max-age=31536000, immutable" if caminho.startswith("assets/") else "no-cache"
+        return FileResponse(ficheiro, headers={"Cache-Control": cache})
+    return FileResponse(FRONTEND / "index.html", headers={"Cache-Control": "no-cache"})

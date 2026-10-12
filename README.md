@@ -47,9 +47,26 @@ uvicorn app.main:app --reload
 # → http://localhost:8000/saude   e   http://localhost:8000/docs
 ```
 
+## Aplicação web
+
+O `arrancar.command` constrói a aplicação web (`frontend/`, React + Vite) e serve tudo em
+**http://localhost:8000**. Os emails e SMS com códigos não saem do computador: aparecem no
+**Mailpit**, em http://localhost:8025 (sem Mailpit, aparecem no terminal).
+
+Contas de demonstração:
+
+| Quem | Como entra |
+|---|---|
+| Contabilista | `demo@faturas.local` / `demonstracao-2026` |
+| Cliente (portal) | telemóvel `912 345 678` ou `joaquim@faroleiro.local` → código no Mailpit |
+
+Para mexer no frontend com recarregamento automático: `cd frontend && npm run dev`
+(abre em http://localhost:5173 e fala com a API em :8000).
+
 ## Estado
-Fase 0 (fundações) concluída: modelo de dados com 20 tabelas, isolamento entre
-gabinetes por Row Level Security, dados base SNC, validação de NIF e leitura do
-QR da AT — 23 testes a passar. Inclui dados de demonstração (`python -m app.demo`) e endpoints de
-demonstração sem autenticação, só para uso local. Próximo passo: autenticação e API do gabinete
-(ver [roadmap](docs/04-roadmap.md)).
+- **Fase 0 (fundações):** modelo de dados, isolamento entre gabinetes por Row Level Security,
+  dados base SNC, validação de NIF e leitura do QR da AT.
+- **Autenticação:** registo do gabinete em 3 passos, confirmação do email por código, entrar e
+  sair, repor a palavra-passe, portal do cliente sem palavra-passe (código por SMS ou email),
+  sessões por cookie httpOnly, limites contra tentativas repetidas. 35 testes a passar.
+- Próximo passo: painel de clientes (ver [roadmap](docs/04-roadmap.md)).
