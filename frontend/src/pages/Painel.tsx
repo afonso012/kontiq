@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { api, ErroApi, type EmpresaPainel, type Estado, type Painel as DadosPainel } from '../api'
 import { AppLayout, useAviso } from '../components/app'
 import { Aviso } from '../components/ui'
@@ -103,6 +104,7 @@ export default function Painel() {
               <div key={a.empresa_id + a.codigo} className={`pf-alert pf-alert--${a.nivel}`}>
                 <span className="pf-alert__tag">{a.nivel === 'bad' ? 'Erro' : 'Aviso'}</span>
                 <div className="atencao__texto"><span className="pf-alert__title">{a.titulo}</span>{a.detalhe ? ` ${a.detalhe}` : ''} · {a.empresa}</div>
+                {a.fatura_id && <Link to={`/faturas/${a.fatura_id}`} className="pf-btn pf-btn--sm">Ver</Link>}
                 {a.codigo === 'sem_faturas' && (
                   <button type="button" className="pf-btn pf-btn--sm" disabled={ocupado === a.empresa_id}
                     onClick={() => pedir({ id: a.empresa_id, nome: a.empresa })}>{a.pedido ? 'Pedir outra vez' : 'Pedir faturas'}</button>
@@ -137,7 +139,7 @@ export default function Painel() {
                 return (
                   <tr key={e.id}>
                     <td>
-                      <button type="button" className="link-empresa" onClick={() => abrir(e)}>{e.nome}</button>
+                      <Link to={`/empresas/${e.id}?periodo=${periodo}`} className="link-empresa">{e.nome}</Link>
                       <span className="pf-table__sub">{e.nif}{!e.portal && <span className="sem-portal"> · sem portal</span>}</span>
                     </td>
                     <td className="is-num">{e.faturas}</td>
@@ -155,7 +157,9 @@ export default function Painel() {
                         ? <button type="button" className="pf-btn pf-btn--sm" disabled={ocupado === e.id} onClick={() => pedir(e)}>Pedir faturas</button>
                         : !e.portal && contacto && e.contacto.nome
                           ? <button type="button" className="pf-btn pf-btn--sm" disabled={ocupado === e.id} onClick={() => convidar(e)}>Convidar</button>
-                          : <button type="button" className="pf-btn pf-btn--sm" onClick={() => abrir(e)}>Editar</button>}
+                          : e.estado === 'warn' || e.estado === 'bad'
+                            ? <Link to={`/empresas/${e.id}?periodo=${periodo}`} className="pf-btn pf-btn--sm">{e.estado === 'bad' ? 'Resolver' : 'Conferir'}</Link>
+                            : <button type="button" className="pf-btn pf-btn--sm" onClick={() => abrir(e)}>Editar</button>}
                     </td>
                   </tr>
                 )

@@ -12,3 +12,4 @@ scripts/*.log
 scripts/diagnostico.txt
 node_modules/
 frontend/dist/
+dados/

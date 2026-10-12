@@ -18,6 +18,7 @@ from sqlalchemy import case, func, select, text
 from .api.auth import portal as portal_router
 from .api.auth import router as auth_router
 from .api.empresas import router as empresas_router
+from .api.faturas import router as faturas_router
 from .api.painel import router as painel_router
 from .auth.servico import ErroAuth
 from .core.config import get_settings
@@ -38,6 +39,7 @@ app.include_router(auth_router)
 app.include_router(portal_router)
 app.include_router(painel_router)
 app.include_router(empresas_router)
+app.include_router(faturas_router)
 
 FRONTEND = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 

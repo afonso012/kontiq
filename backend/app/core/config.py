@@ -1,5 +1,6 @@
 """Configuração lida das variáveis de ambiente (ficheiro .env em desenvolvimento)."""
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -19,6 +20,11 @@ class Settings(BaseSettings):
     s3_bucket: str = "documentos"
     s3_access_key: str = "faturas"
     s3_secret_key: str = "faturas-minio"
+
+    # Onde guardar os PDFs e fotografias. "local" = pasta no disco (desenvolvimento);
+    # mais tarde "s3" para o armazenamento de objetos (MinIO/S3).
+    armazenamento: str = "local"
+    pasta_documentos: str = str(Path(__file__).resolve().parents[3] / "dados" / "documentos")
 
     # Domínio dos endereços de entrada por empresa (x7k2p9@entrada.exemplo.pt).
     dominio_email_entrada: str = "entrada.faturasemdia.local"

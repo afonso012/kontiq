@@ -15,15 +15,16 @@
 - [ ] Entrar com Google e Microsoft (precisa de domínio e app registada)
 - [ ] Envio real de email (fornecedor SMTP) e SMS (fornecedor a escolher)
 - [x] CRUD de empresas-cliente
-- [ ] Carregar documento → guardar no S3 → criar fatura
-- [ ] Leitura do QR no servidor (PDF e imagem)
-- [ ] Validações e deteção de duplicados
-- [ ] Classificação com regras por fornecedor
+- [x] Carregar documento → guardar (disco local; S3 na fase 5) → criar fatura
+- [x] Leitura do QR no servidor (PDF e imagem)
+- [x] Validações e deteção de duplicados
+- [x] Classificação com regras por fornecedor
 - [x] Estado do mês por empresa (painel de clientes)
 - [x] Registo de atividade
 
 ## Fase 2 — Interfaces
 - [x] Painel do gabinete: números do mês, o que precisa de atenção, empresas por estado
+- [x] Faturas da empresa, carregar PDFs/fotos e conferir (documento ao lado, fila, duplicados, regras)
 - [ ] Portal do cliente: enviar faturas, ver o que falta, responder a comentários
 - [ ] Email de entrada por empresa
 

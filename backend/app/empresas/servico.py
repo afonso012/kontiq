@@ -10,7 +10,7 @@ import uuid
 from datetime import date, datetime, timezone
 from decimal import Decimal
 
-from sqlalchemy import case, func, select
+from sqlalchemy import String, case, cast, func, select
 from sqlalchemy.orm import Session
 
 from ..auth.servico import ErroAuth
@@ -55,8 +55,11 @@ def _registar(s: Session, gabinete_id, utilizador_id, entidade_id, acao: str, da
 
 def painel(s: Session, gabinete_id: uuid.UUID, mes: date) -> dict:
     mes = mes.replace(day=1)
+    # Uma fatura sem QR ainda por preencher não é um "problema": está só por conferir.
+    por_preencher = (Fatura.metodo_leitura == "manual") & Fatura.nif_fornecedor.is_(None) & (Fatura.total == 0)
     erros_abertos = (select(ProblemaFatura.fatura_id, func.count().label("n"))
-                     .where(ProblemaFatura.resolvido.is_(False), ProblemaFatura.nivel == "erro")
+                     .join(Fatura, Fatura.id == ProblemaFatura.fatura_id)
+                     .where(ProblemaFatura.resolvido.is_(False), ProblemaFatura.nivel == "erro", ~por_preencher)
                      .group_by(ProblemaFatura.fatura_id).subquery())
     conferida = Fatura.estado.in_(("conferida", "exportada"))
     linhas = s.execute(
@@ -107,15 +110,15 @@ def painel(s: Session, gabinete_id: uuid.UUID, mes: date) -> dict:
     # Problemas por resolver, agrupados por empresa e tipo.
     problemas = s.execute(
         select(Empresa.id, Empresa.nome, ProblemaFatura.codigo, func.count().label("n"),
-               func.min(Fatura.numero).label("numero"))
+               func.min(Fatura.numero).label("numero"), func.min(cast(Fatura.id, String)).label("fatura_id"))
         .join(Fatura, Fatura.id == ProblemaFatura.fatura_id).join(Empresa, Empresa.id == Fatura.empresa_id)
         .where(ProblemaFatura.resolvido.is_(False), ProblemaFatura.nivel == "erro", Fatura.periodo == mes,
-               Fatura.eliminada_em.is_(None))
+               Fatura.eliminada_em.is_(None), Fatura.estado != "rejeitada", ~por_preencher)
         .group_by(Empresa.id, Empresa.nome, ProblemaFatura.codigo)
         .order_by(func.count().desc())
     ).all()
     atencao = [{
-        "nivel": "bad", "empresa_id": str(p.id), "empresa": p.nome, "codigo": p.codigo,
+        "nivel": "bad", "empresa_id": str(p.id), "empresa": p.nome, "codigo": p.codigo, "fatura_id": p.fatura_id,
         "titulo": NOMES_PROBLEMA.get(p.codigo, p.codigo.replace("_", " ").capitalize()),
         "detalhe": (f"em {p.n} faturas" if p.n > 1 else (f"de {p.numero}" if p.codigo == "duplicado" and p.numero
                     else "em 1 fatura")),

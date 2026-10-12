@@ -55,6 +55,27 @@ export const api = {
   criarEmpresa: (dados: DadosEmpresa) => pedido<{ id: string; nome: string }>('POST', '/api/empresas', dados),
   editarEmpresa: (id: string, dados: DadosEmpresa) => pedido<{ id: string; nome: string }>('PUT', `/api/empresas/${id}`, dados),
   convidar: (id: string) => pedido<{ canal: 'sms' | 'email' }>('POST', `/api/empresas/${id}/convite`),
+  faturasEmpresa: (id: string, periodo: string) => pedido<FaturasEmpresa>('GET', `/api/empresas/${id}/faturas?periodo=${encodeURIComponent(periodo)}`),
+  classificacao: () => pedido<Opcoes>('GET', '/api/classificacao'),
+  fatura: (id: string) => pedido<Fatura>('GET', `/api/faturas/${id}`),
+  gravarFatura: (id: string, dados: DadosFatura) => pedido<Fatura>('PUT', `/api/faturas/${id}`, dados),
+  conferir: (id: string, lembrar: boolean, dados?: DadosFatura) =>
+    pedido<{ seguinte: string | null; fatura: Fatura }>('POST', `/api/faturas/${id}/conferir`, { lembrar, dados }),
+  conferirLote: (ids: string[]) => pedido<{ conferidas: number; falhadas: { id: string; mensagem: string }[] }>('POST', '/api/faturas/conferir-lote', { ids }),
+  rejeitar: (id: string, motivo: string | null) => pedido<Fatura>('POST', `/api/faturas/${id}/rejeitar`, { motivo }),
+  reabrir: (id: string) => pedido<Fatura>('POST', `/api/faturas/${id}/reabrir`),
+  resolverProblema: (id: string, pid: string) => pedido<Fatura>('POST', `/api/faturas/${id}/problemas/${pid}/resolver`),
+  carregar: async (empresaId: string, periodo: string, ficheiros: File[]) => {
+    const fd = new FormData()
+    ficheiros.forEach((f) => fd.append('ficheiros', f, f.name))
+    fd.append('periodo', periodo)
+    let r: Response
+    try { r = await fetch(`/api/empresas/${empresaId}/documentos`, { method: 'POST', body: fd, credentials: 'same-origin' }) }
+    catch { throw new ErroApi(0, 'rede', 'Sem ligação ao servidor. Verifique a internet e tente outra vez.') }
+    const dados = await r.json().catch(() => null)
+    if (!r.ok) throw new ErroApi(r.status, dados?.codigo ?? 'erro', dados?.mensagem ?? (r.status === 413 ? 'Ficheiros demasiado grandes.' : 'Não foi possível carregar.'))
+    return dados as { resultados: ResultadoCarregar[] }
+  },
   pedirFaturas: (id: string, periodo: string) => pedido<{ canal: 'sms' | 'email' }>('POST', `/api/empresas/${id}/pedir-faturas`, { periodo }),
 }
 
@@ -72,7 +93,7 @@ export type Painel = {
   gabinete: { nome: string; programa: string | null }
   totais: { total: number; total_txt: string; faturas: number; empresas: number; conferidas: number; por_conferir: number
     ia_por_conferir: number; problemas: number; problemas_txt: string; pct_conferido: number }
-  atencao: { nivel: 'bad' | 'warn'; empresa_id: string; empresa: string; codigo: string; titulo: string; detalhe: string; pedido?: boolean }[]
+  atencao: { nivel: 'bad' | 'warn'; empresa_id: string; empresa: string; codigo: string; titulo: string; detalhe: string; pedido?: boolean; fatura_id?: string }[]
   empresas: EmpresaPainel[]
   onboarding: { empresas: boolean; portal: boolean }
 }
@@ -97,4 +118,55 @@ export type ResumoPortal = {
   utilizador: { nome: string }
   faturas_mes: number
   mes: string
+}
+
+export type ResultadoCarregar = {
+  nome: string; estado: 'lida' | 'manual' | 'repetido' | 'erro'; mensagem: string
+  fatura_id: string | null; fornecedor: string | null; numero: string | null; total: string | null; metodo: string | null
+}
+
+export type EstadoFatura = 'ok' | 'warn' | 'bad' | 'rejeitada'
+
+export type LinhaFatura = {
+  id: string; data: string | null; fornecedor: string | null; nif: string | null; numero: string | null; tipo: string
+  metodo: 'qr' | 'ia' | 'manual'; confianca: number | null; conta: string | null; conta_nome: string | null
+  iva: string; total: string; total_n: number; estado: EstadoFatura; nota: string | null; nota_curta: string | null
+}
+
+export type FaturasEmpresa = {
+  empresa: { id: string; nome: string; nif: string; periodicidade_iva: string; portal: string | null; email_entrada: string }
+  periodo: string; periodo_txt: string
+  totais: { faturas: number; total_txt: string; iva_txt: string; conferidas: number; por_conferir: number; qr: number; manual: number; problemas: number }
+  faturas: LinhaFatura[]
+}
+
+export type Opcoes = {
+  categorias: { id: string; nome: string; conta: string | null; tratamento: string }[]
+  contas: { codigo: string; descricao: string }[]
+  tratamentos: { id: string; nome: string }[]
+  tipos: { id: string; nome: string }[]
+}
+
+export type Fatura = {
+  id: string; estado: 'por_conferir' | 'conferida' | 'exportada' | 'rejeitada'; estado_vista: EstadoFatura
+  empresa: { id: string; nome: string; nif: string }; periodo: string
+  documento: { id: string; nome: string; tipo: string; canal: string; recebido: string } | null
+  metodo: 'qr' | 'ia' | 'manual'; confianca: number | null
+  fornecedor: { nome: string; nif: string; pais: string; faturas: number; conhecido: boolean }
+  tipo_documento: string; numero: string; atcud: string; data: string; nif_adquirente: string | null
+  linhas: { espaco: string; tipo_taxa: string; taxa: number | null; base: string; iva: string }[]
+  base_total: string; iva_total: string; total: string; total_txt: string
+  categoria_id: string | null; conta: string | null; tratamento_iva: string; origem_classificacao: string
+  regra: { criada: string; geral: boolean } | null
+  notas: string
+  problemas: { id: string; codigo: string; nivel: 'erro' | 'aviso'; mensagem: string }[]
+  duplicado_de: string | null
+  fila: { posicao: number; total: number; anterior: string | null; seguinte: string | null }
+  conferida_em: string | null
+}
+
+export type DadosFatura = {
+  fornecedor: string; nif: string; pais: string; tipo_documento: string; numero: string; atcud: string; data: string
+  linhas: { espaco: string; tipo_taxa?: string | null; taxa: number | null; base: string; iva: string }[]
+  total: string; categoria_id: string | null; conta: string | null; tratamento_iva: string; notas: string
 }
