@@ -7,3 +7,4 @@ __pycache__/
 *.log
 scripts/*.log
 scripts/diagnostico.txt
+*.egg-info/
