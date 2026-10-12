@@ -6,7 +6,7 @@ import { Aviso, BotaoSeta, BotoesSociais, Campo } from '../components/ui'
 import { destino, useSessao } from '../sessao'
 
 export default function Entrar() {
-  const { definir } = useSessao()
+  const { eu, definir } = useSessao()
   const nav = useNavigate()
   const loc = useLocation()
   const [email, setEmail] = useState('')
@@ -36,6 +36,9 @@ export default function Entrar() {
   return (
     <AuthLayout topo={<span className="muted14">Ainda não tem conta? <Link to="/registo">Criar conta</Link></span>} aside={<AsideEntrar />}>
       <form className="form" onSubmit={submeter} noValidate>
+        {eu?.tipo === 'portal' && (
+          <Aviso tipo="info">Tem sessão iniciada no portal como {eu.utilizador.nome}. Ao entrar como contabilista, essa sessão termina. <Link to="/portal/inicio">Voltar ao portal</Link></Aviso>
+        )}
         <div>
           <h1 className="form__titulo">Bem-vindo de volta</h1>
           <p className="form__lead">Entre para ver as faturas dos seus clientes.</p>

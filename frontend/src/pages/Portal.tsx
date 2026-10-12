@@ -6,7 +6,7 @@ import { useSessao } from '../sessao'
 
 /** Entrada do cliente do gabinete: sem palavra-passe, recebe um código por SMS ou email. */
 export default function Portal() {
-  const { definir } = useSessao()
+  const { eu, definir } = useSessao()
   const nav = useNavigate()
   const [canal, setCanal] = useState<'sms' | 'email'>('sms')
   const [destino, setDestino] = useState('')
@@ -56,6 +56,9 @@ export default function Portal() {
 
       {passo === 1 ? (
         <form className="portal__form" onSubmit={pedir} noValidate>
+          {eu?.tipo === 'gabinete' && (
+            <Aviso tipo="info">Tem sessão iniciada no gabinete como {eu.utilizador.nome}. Ao entrar no portal, essa sessão termina. <Link to="/painel">Voltar ao painel</Link></Aviso>
+          )}
           <div className="segmentado" role="group" aria-label="Receber o código por">
             <button type="button" className={canal === 'sms' ? 'on' : ''} aria-pressed={canal === 'sms'}
               onClick={() => { setCanal('sms'); setDestino(''); setErro(null) }}>Telemóvel</button>

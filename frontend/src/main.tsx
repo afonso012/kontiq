@@ -26,10 +26,10 @@ createRoot(document.getElementById('root')!).render(
       <SessaoProvider>
         <Routes>
           <Route path="/" element={<Raiz />} />
-          <Route path="/entrar" element={<SoSemSessao><Entrar /></SoSemSessao>} />
+          <Route path="/entrar" element={<SoSemSessao permitir="portal"><Entrar /></SoSemSessao>} />
           <Route path="/registo" element={<SoSemSessao><Registo /></SoSemSessao>} />
           <Route path="/recuperar" element={<SoSemSessao><Recuperar /></SoSemSessao>} />
-          <Route path="/portal" element={<SoSemSessao><Portal /></SoSemSessao>} />
+          <Route path="/portal" element={<SoSemSessao permitir="gabinete"><Portal /></SoSemSessao>} />
           <Route path="/confirmar-email" element={<Exige tipo="gabinete-por-confirmar"><ConfirmarEmail /></Exige>} />
           <Route path="/painel" element={<Exige tipo="gabinete"><Painel /></Exige>} />
           <Route path="/empresas/:id" element={<Exige tipo="gabinete"><EmpresaFaturas /></Exige>} />

@@ -44,9 +44,11 @@ export function Exige({ tipo, children }: { tipo: 'gabinete' | 'gabinete-por-con
   return certo ? <>{children}</> : <Navigate to={destino(eu)} replace />
 }
 
-/** Páginas de entrada: quem já tem sessão segue em frente. */
-export function SoSemSessao({ children }: { children: ReactNode }) {
+/** Páginas de entrada: quem já tem sessão segue em frente.
+ *  `permitir` deixa ficar quem tem a OUTRA sessão (ex.: um contabilista que quer experimentar o portal). */
+export function SoSemSessao({ children, permitir }: { children: ReactNode; permitir?: 'gabinete' | 'portal' }) {
   const { eu, carregado } = useSessao()
   if (!carregado) return <div className="carregar" aria-busy="true" />
+  if (eu && eu.tipo === permitir) return <>{children}</>
   return eu ? <Navigate to={destino(eu)} replace /> : <>{children}</>
 }

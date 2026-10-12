@@ -46,6 +46,13 @@ def contexto(request: Request) -> svc.Contexto:
                         user_agent=request.headers.get("user-agent"))
 
 
+def trocar_sessao(request: Request) -> None:
+    """Ao entrar com outra conta no mesmo browser, a sessão anterior termina."""
+    antigo = request.cookies.get(COOKIE)
+    if antigo:
+        executar(lambda s: svc.terminar_sessao(s, antigo))
+
+
 def por_cookie(resp: Response, token: str, persistente: bool, max_dias: int = 30) -> None:
     s = get_settings()
     resp.set_cookie(COOKIE, token, httponly=True, samesite="lax", secure=s.producao, path="/",
@@ -194,6 +201,7 @@ class Entrar(BaseModel):
 def entrar(corpo: Entrar, request: Request, response: Response) -> dict:
     ctx = contexto(request)
     token = executar(lambda s: svc.entrar(s, ctx, corpo.email, corpo.password, corpo.manter)[1])
+    trocar_sessao(request)
     por_cookie(response, token, persistente=corpo.manter)
     return executar(_eu(token))
 
@@ -259,5 +267,6 @@ class EntrarPortal(PedirCodigoPortal):
 def entrar_portal(corpo: EntrarPortal, request: Request, response: Response) -> dict:
     ctx = contexto(request)
     token = executar(lambda s: svc.entrar_portal(s, ctx, corpo.canal, corpo.destino, corpo.codigo)[1])
+    trocar_sessao(request)
     por_cookie(response, token, persistente=True, max_dias=60)
     return executar(_eu(token))
