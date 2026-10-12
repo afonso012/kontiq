@@ -143,3 +143,68 @@ button { font-family: inherit; }
 .vazio h2 { margin: 16px 0 8px; font-size: 24px; font-weight: 500; letter-spacing: -0.02em; }
 .vazio p { margin: 0; }
 @media (max-width: 560px) { .app__topo, .app__conteudo { padding-left: 16px; padding-right: 16px; } }
+
+/* ---------------------------------------------------------------
+   Escala dos ecrãs de entrada (v2): tudo maior e a crescer com o ecrã.
+   Em portáteis fica como antes; em monitores grandes (1600px+) cresce.
+   --------------------------------------------------------------- */
+.auth, .ecra-centro { font-size: 16px; line-height: 24px; }
+.auth .marca, .ecra-centro .marca { font-size: 20px; }
+.auth .muted14 { font-size: 15px; }
+.auth__main { padding: clamp(24px, 2vw, 40px) clamp(24px, 3vw, 56px); }
+.auth__rodape { font-size: 14px; }
+
+.form { max-width: clamp(420px, 28vw, 520px); gap: clamp(20px, 1.6vw, 26px); }
+.form--largo { max-width: clamp(460px, 30vw, 560px); }
+.form__titulo { font-size: clamp(40px, 2.9vw, 54px); letter-spacing: -0.035em; }
+.form__lead { font-size: clamp(16px, 1.05vw, 18px); line-height: 1.5; }
+.form__nota, .auth .muted13 { font-size: 14px; }
+.auth .pf-field__label, .ecra-centro .pf-field__label { font-size: 14px; }
+.auth .pf-field__input { height: clamp(48px, 3.1vw, 56px); font-size: 16px; padding: 0 18px; border-radius: 14px; }
+.auth .pf-field__hint { font-size: 14px; }
+.sociais .pf-btn { height: clamp(48px, 3.1vw, 56px); font-size: 15px; }
+.divisor { font-size: 14px; }
+.check { font-size: 15px; line-height: 22px; }
+.check input { width: 20px; height: 20px; }
+.botao-grande { height: clamp(52px, 3.4vw, 60px); font-size: 16px; padding-left: 26px; }
+.botao-grande .pf-btn__arrow { width: clamp(42px, 2.7vw, 48px); height: clamp(42px, 2.7vw, 48px); }
+.opt { height: 44px; padding: 0 18px; font-size: 15px; }
+.opcoes legend { font-size: 14px; }
+.passos span { height: 5px; }
+
+/* Painel de marca */
+.auth__aside { justify-content: center; gap: clamp(48px, 7vh, 112px); padding: clamp(48px, 4vw, 88px); }
+.aside__sub { font-size: 14px; }
+.aside__titulo { font-size: clamp(52px, 4vw, 80px); max-width: 15ch; }
+.aside__lead { font-size: clamp(17px, 1.15vw, 20px); line-height: 1.5; max-width: 34ch; }
+.flutuantes { height: clamp(300px, 22vw, 400px); max-width: 760px; }
+.flut--1 { width: clamp(280px, 19vw, 360px); top: 18%; }
+.flut--2 { width: clamp(250px, 16vw, 320px); }
+.flut--3 { width: clamp(300px, 19vw, 380px); padding: 16px 20px; }
+.flut .muted12 { font-size: 13px; } .flut .muted13 { font-size: 14px; }
+.flut__nome { font-size: clamp(15px, 1.05vw, 18px); }
+.flut .grande { font-size: clamp(24px, 1.8vw, 32px); }
+.passos-produto { max-width: 560px; gap: 16px; }
+.passos-produto li { padding: 22px 24px; }
+.passos-produto strong { font-size: 17px; }
+.passos-produto p { font-size: 15px; line-height: 1.5; }
+.num { width: 36px; height: 36px; font-size: 14px; }
+.preview-portal { width: clamp(340px, 24vw, 420px); }
+.preview-portal__nome { font-size: 22px; }
+.preview-portal__corpo { font-size: 15px; }
+.aside__centrado .muted13 { font-size: 14px; }
+
+/* Confirmar email */
+.cartao-codigo { max-width: 540px; padding: 48px; gap: 26px; }
+.cartao-codigo .form__titulo { font-size: clamp(36px, 2.6vw, 46px); }
+.codigo { gap: 10px; }
+.codigo__dig { width: 60px; height: 70px; font-size: 28px; border-radius: 16px; }
+@media (max-width: 560px) { .codigo__dig { width: 46px; height: 56px; font-size: 24px; } }
+
+/* Portal (telemóvel) */
+.portal { font-size: 16px; }
+.portal__titulo { font-size: 40px; }
+.portal .pf-field__input { height: 54px; font-size: 17px; }
+.portal .pf-field__label { font-size: 15px; }
+.portal .botao-grande { height: 58px; font-size: 17px; }
+.segmentado button { height: 42px; font-size: 15px; }

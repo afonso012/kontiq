@@ -1,0 +1,1 @@
+{"root":["./src/api.ts","./src/main.tsx","./src/sessao.tsx","./src/components/layout.tsx","./src/components/ui.tsx","./src/pages/confirmaremail.tsx","./src/pages/entrar.tsx","./src/pages/inicio.tsx","./src/pages/portal.tsx","./src/pages/recuperar.tsx","./src/pages/registo.tsx"],"version":"5.8.3"}
