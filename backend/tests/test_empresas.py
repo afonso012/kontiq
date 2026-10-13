@@ -106,13 +106,22 @@ def test_gabinetes_nao_se_veem(cliente, enviados, limpar, mensagens):
 
 
 def test_painel_demo_tem_numeros(cliente):
-    """Com os dados de demonstração: totais, estados e problemas calculados."""
+    """Com os dados de demonstração: totais e estados coerentes.
+
+    Não exige um estado concreto (por exemplo, um duplicado por resolver): quem usa a
+    demonstração muda-a, e os duplicados já são testados com dados próprios em test_faturas.
+    """
     r = cliente.post("/api/auth/entrar", json={"email": "demo@faturas.local", "password": "demonstracao-2026"})
     if r.status_code != 200:
         pytest.skip("Sem dados de demonstração")
     p = cliente.get("/api/painel", params={"periodo": "2026-10"}).json()
-    assert p["totais"]["faturas"] >= 5 and p["totais"]["problemas"] >= 1
-    faroleiro = next(e for e in p["empresas"] if e["nome"].startswith("Restaurante O Faroleiro"))
-    assert faroleiro["estado"] == "bad"
-    assert any(a["codigo"] == "duplicado" for a in p["atencao"])
-    assert p["empresas"][0]["estado"] == "bad"  # ordenadas por gravidade
+    empresas = p["empresas"]
+    assert len(empresas) >= 3 and p["totais"]["faturas"] == sum(e["faturas"] for e in empresas)
+    for e in empresas:
+        esperado = ("bad" if e["com_erro"] else "none" if not e["faturas"]
+                    else "warn" if e["conferidas"] < e["faturas"] else "ok")
+        assert e["estado"] == esperado, e["nome"]
+    ordem = {"bad": 0, "warn": 1, "none": 2, "ok": 3}
+    assert [ordem[e["estado"]] for e in empresas] == sorted(ordem[e["estado"]] for e in empresas)  # por gravidade
+    ids = {e["id"] for e in empresas}
+    assert all(a.get("empresa_id") in ids for a in p["atencao"] if a.get("empresa_id"))
