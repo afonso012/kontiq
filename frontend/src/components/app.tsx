@@ -42,7 +42,7 @@ export function AppLayout({ children, glow }: { children: ReactNode; glow?: bool
           <NavLink to="/painel" className={({ isActive }) => `nav__item${isActive ? ' on' : ''}`}><Icone nome="painel" />Painel</NavLink>
           {emBreve('faturas', 'Faturas')}
           {emBreve('pedidos', 'Pedidos')}
-          {emBreve('exportar', 'Exportações')}
+          <NavLink to="/exportacoes" className={({ isActive }) => `nav__item${isActive ? ' on' : ''}`}><Icone nome="exportar" />Exportações</NavLink>
           <div className="nav__espaco" />
           <div className="nav__conta">
             <span className="avatar" aria-hidden="true">{iniciais(eu?.utilizador.nome ?? '')}</span>

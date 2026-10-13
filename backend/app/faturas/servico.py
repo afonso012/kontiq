@@ -298,7 +298,7 @@ def lista_empresa(s: Session, empresa_id, mes: date) -> dict:
             "conta": f.conta_codigo, "conta_nome": contas.get(f.conta_codigo) if f.conta_codigo else None,
             "iva": euros(f.iva_total), "total": euros(f.total), "total_n": float(f.total),
             "estado": _estado_vista(f), "nota": principal.mensagem if principal else None,
-            "por_preencher": _por_preencher(f),
+            "por_preencher": _por_preencher(f), "exportada": f.estado == "exportada",
             "nota_curta": ({"duplicado": "Possível duplicado", "nif_invalido": "NIF inválido",
                            "contas_nao_batem": "Totais não batem", "sem_data": "Sem data", "sem_total": "Sem total",
                            "iva_estrangeiro": "IVA estrangeiro", "adquirente_diferente": "Outro adquirente",

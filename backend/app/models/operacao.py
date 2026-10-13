@@ -5,8 +5,9 @@ import uuid
 from datetime import date, datetime
 
 from sqlalchemy import (
+    Boolean,
     BigInteger, CheckConstraint, Date, DateTime, ForeignKey, Identity, Index, Integer, String, Text,
-    UniqueConstraint, func,
+    UniqueConstraint, func, text,
 )
 from sqlalchemy.dialects.postgresql import INET, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -66,6 +67,11 @@ class Exportacao(ComId, Base):
     chave_armazenamento: Mapped[str | None] = mapped_column(String(300))
     criado_por: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("utilizadores.id", ondelete="SET NULL"))
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    # Uma exportação de várias empresas gera um ficheiro: as linhas partilham o lote.
+    lote_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), index=True)
+    # As faturas ficaram marcadas como exportadas (e bloqueadas)?
+    marcou_exportadas: Mapped[bool] = mapped_column(Boolean, server_default=text("true"))
+    desfeita_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class RegistoAtividade(Base):

@@ -100,6 +100,8 @@ class Fatura(ComId, ComDatas, Base):
     conferida_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     notas: Mapped[str | None] = mapped_column(Text)
     eliminada_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Lote da exportação que a levou para o programa de contabilidade.
+    exportacao_lote: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), index=True)
 
     linhas_iva: Mapped[list["LinhaIVA"]] = relationship(back_populates="fatura", cascade="all, delete-orphan")
     problemas: Mapped[list["ProblemaFatura"]] = relationship(back_populates="fatura", cascade="all, delete-orphan")

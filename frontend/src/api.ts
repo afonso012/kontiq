@@ -76,6 +76,10 @@ export const api = {
     if (!r.ok) throw new ErroApi(r.status, dados?.codigo ?? 'erro', dados?.mensagem ?? (r.status === 413 ? 'Ficheiros demasiado grandes.' : 'Não foi possível carregar.'))
     return dados as { resultados: ResultadoCarregar[] }
   },
+  previsaoExportacao: (periodo: string) => pedido<PrevisaoExportacao>('GET', `/api/exportacoes/previsao?periodo=${encodeURIComponent(periodo)}`),
+  exportar: (dados: { periodo: string; empresas: string[]; formato: string; incluir_exportadas: boolean; marcar: boolean }) =>
+    pedido<{ lote: string; nome: string; faturas: number; empresas: number }>('POST', '/api/exportacoes', dados),
+  desfazerExportacao: (lote: string) => pedido<{ faturas: number }>('POST', `/api/exportacoes/${lote}/desfazer`),
   pedirFaturas: (id: string, periodo: string) => pedido<{ canal: 'sms' | 'email' }>('POST', `/api/empresas/${id}/pedir-faturas`, { periodo }),
 }
 
@@ -130,7 +134,7 @@ export type EstadoFatura = 'ok' | 'warn' | 'bad' | 'rejeitada'
 export type LinhaFatura = {
   id: string; data: string | null; fornecedor: string | null; nif: string | null; numero: string | null; tipo: string
   metodo: 'qr' | 'ia' | 'manual'; confianca: number | null; conta: string | null; conta_nome: string | null
-  iva: string; total: string; total_n: number; estado: EstadoFatura; nota: string | null; nota_curta: string | null
+  iva: string; total: string; total_n: number; estado: EstadoFatura; nota: string | null; nota_curta: string | null; exportada?: boolean
 }
 
 export type FaturasEmpresa = {
@@ -169,4 +173,12 @@ export type DadosFatura = {
   fornecedor: string; nif: string; pais: string; tipo_documento: string; numero: string; atcud: string; data: string
   linhas: { espaco: string; tipo_taxa?: string | null; taxa: number | null; base: string; iva: string }[]
   total: string; categoria_id: string | null; conta: string | null; tratamento_iva: string; notas: string
+}
+
+export type PrevisaoExportacao = {
+  periodo: string; periodo_txt: string
+  empresas: { id: string; nome: string; nif: string; prontas: number; por_conferir: number; exportadas: number; total_txt: string }[]
+  formatos: { id: string; nome: string }[]
+  historico: { lote: string; em: string; formato: string; formato_nome: string; periodo: string; periodo_txt: string; faturas: number
+    empresas: number; empresa: string | null; nome: string | null; quem: string | null; marcou: boolean; desfeita: string | null }[]
 }

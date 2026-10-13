@@ -34,7 +34,7 @@
 - [ ] Revisão rápida das faturas lidas com IA
 
 ## Fase 4 — Integrações
-- [ ] Exportações CSV, Excel e ZIP
+- [x] Exportações CSV, Excel (com resumo do IVA) e ZIP com documentos; marcar como exportadas e desfazer
 - [ ] Formatos de importação: TOConline, Primavera, PHC, Sage
 - [ ] APIs: InvoiceXpress, Moloni
 - [ ] Cruzamento com a lista do e-Fatura (formato a confirmar)

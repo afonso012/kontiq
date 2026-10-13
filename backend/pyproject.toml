@@ -16,6 +16,7 @@ dependencies = [
     "pillow-heif>=0.18",
     "pypdfium2>=4.30",
     "zxing-cpp>=2.2",
+    "openpyxl>=3.1",
 ]
 
 [project.optional-dependencies]

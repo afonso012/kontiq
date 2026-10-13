@@ -150,7 +150,7 @@ export default function EmpresaFaturas() {
                     <td>{f.conta ? <><span className="pf-mono muted">{f.conta}</span> {f.conta_nome}</> : <span style={{ color: 'var(--warn)' }}>Por classificar</span>}</td>
                     <td className="is-num">{f.iva}</td>
                     <td className="is-num">{f.total}</td>
-                    <td><span className={ESTADOS[f.estado][1]}>{ESTADOS[f.estado][0]}</span>{f.nota_curta && f.estado !== 'ok' && <span className="nota-linha">{f.nota_curta}</span>}</td>
+                    <td><span className={ESTADOS[f.estado][1]}>{f.exportada ? 'Exportada' : ESTADOS[f.estado][0]}</span>{f.nota_curta && f.estado !== 'ok' && <span className="nota-linha">{f.nota_curta}</span>}</td>
                   </tr>
                 ))}
                 {lista.length === 0 && <tr><td colSpan={8} className="centro muted" style={{ padding: 32 }}>Nenhuma fatura com este filtro.</td></tr>}

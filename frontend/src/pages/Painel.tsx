@@ -82,6 +82,7 @@ export default function Painel() {
             <input className="pf-field__input" type="search" placeholder="Procurar empresa ou NIF" value={procura} onChange={(e) => setProcura(e.target.value)} />
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
           </label>
+          <Link to={`/exportacoes?periodo=${periodo}`} className="pf-btn">Exportar o mês</Link>
           <button type="button" className="pf-btn pf-btn--primary pf-btn--arrow" onClick={() => abrir(null)}>
             Adicionar empresa
             <span className="pf-btn__arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M8 3v10M3 8h10" /></svg></span>

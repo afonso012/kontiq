@@ -45,6 +45,8 @@ def limpar():
     with eng.begin() as c:
         c.execute(text("DELETE FROM tentativas_login WHERE chave LIKE ANY(:p)"),
                   {"p": [f"%{e}%" for e in emails] or ["-"]})
+        # O TestClient vem sempre do "IP" testclient: não deixar falhas acumuladas entre execuções.
+        c.execute(text("DELETE FROM tentativas_login WHERE chave = 'ip:testclient' OR chave LIKE 'portal:%'"))
         c.execute(text("DELETE FROM codigos_verificacao WHERE destino = ANY(:e)"), {"e": emails})
         c.execute(text("DELETE FROM utilizadores WHERE lower(email) = ANY(:e)"), {"e": emails})
         c.execute(text("DELETE FROM gabinetes WHERE nif = ANY(:n)"), {"n": nifs})
@@ -181,6 +183,11 @@ def test_portal_por_sms_com_conta_demo(cliente, enviados):
     from app.demo import DEMO_CLIENTE, semear
     semear()
     tel = DEMO_CLIENTE[2]
+    # Limite de 5 códigos por hora: limpar os de execuções anteriores dos testes.
+    eng = create_engine(DONO_URL)
+    with eng.begin() as c:
+        c.execute(text("DELETE FROM codigos_verificacao WHERE destino = :t"), {"t": tel})
+    eng.dispose()
     assert cliente.post("/api/portal/codigo", json={"canal": "sms", "destino": "912 345 678"}).status_code == 202
     codigo = [e for e in enviados if e["destino"] == tel][-1]["codigo"]
     r = cliente.post("/api/portal/entrar", json={"canal": "sms", "destino": "912345678", "codigo": codigo})
