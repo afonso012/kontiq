@@ -185,6 +185,12 @@ export default function ConferirFatura() {
             {!fechada && outros.map((p) => (
               <div key={p.id} className={`pf-alert pf-alert--${p.nivel === 'erro' ? 'bad' : 'warn'}`}><span className="pf-alert__tag">{p.nivel === 'erro' ? 'Erro' : 'Aviso'}</span><div>{p.mensagem}</div></div>
             ))}
+            {f.metodo === 'ia' && !fechada && (
+              <div className="pf-alert pf-alert--info"><span className="pf-alert__tag">Info</span>
+                <div>{f.modo_leitura === 'teste'
+                  ? 'Lida automaticamente a partir do texto do PDF (modo de teste, sem IA). Confirme cada valor com o documento.'
+                  : 'Lida automaticamente por IA. Confirme os valores com o documento.'}</div></div>
+            )}
             {porPreencher && !fechada && <div className="pf-alert pf-alert--info"><span className="pf-alert__tag">Info</span><div>Sem código QR: preencha os dados a partir do documento.</div></div>}
             {erro && <Aviso>{erro}</Aviso>}
             <fieldset disabled={fechada || aGravar} className="dados__campos">

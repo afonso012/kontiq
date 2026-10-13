@@ -31,8 +31,9 @@
 
 ## Fase 3 — Leitura com IA
 - [ ] Fila de tarefas e worker
-- [ ] Extração com IA para faturas sem QR, com nível de confiança
-- [ ] Revisão rápida das faturas lidas com IA
+- [x] Leitura de faturas sem QR com nível de confiança: modo de teste (regras sobre o texto do PDF) e modo Claude (precisa de chave)
+- [ ] Ativar o modo Claude com uma chave real e medir custo/qualidade
+- [x] Revisão das faturas lidas automaticamente (aviso de confiança baixa)
 
 ## Fase 4 — Integrações
 - [x] Exportações CSV, Excel (com resumo do IVA) e ZIP com documentos; marcar como exportadas e desfazer

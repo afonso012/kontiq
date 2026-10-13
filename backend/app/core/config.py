@@ -31,6 +31,12 @@ class Settings(BaseSettings):
 
     secret_key: str = "mudar-em-producao"
 
+    # Leitura de faturas sem QR: "teste" (regras sobre o texto, sem custos),
+    # "anthropic" (Claude, precisa de chave e tem custo por fatura) ou "desligada".
+    ia_modo: str = "teste"
+    anthropic_api_key: str = ""
+    ia_modelo: str = "claude-haiku-5-5"
+
     # Endereço público da aplicação (links nos emails).
     url_publica: str = "http://localhost:8000"
     # Envio de email. Em desenvolvimento: Mailpit (caixa de correio de teste em http://localhost:8025).

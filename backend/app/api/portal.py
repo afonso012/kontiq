@@ -72,8 +72,8 @@ async def enviar(ficheiros: list[UploadFile] = File(...), atual: SessaoAtual = D
         res = fsvc.carregar(s, atual.gabinete_id, atual.utilizador_id, atual.empresa_id, lidos,
                             date.today().replace(day=1), canal="portal")
     # Ao cliente só interessa se ficou recebida; a leitura é assunto do gabinete.
-    return {"resultados": [{"nome": r.nome, "ok": r.estado in ("lida", "manual"), "repetido": r.estado == "repetido",
-                            "mensagem": ("Recebida." if r.estado in ("lida", "manual")
+    return {"resultados": [{"nome": r.nome, "ok": r.estado in ("lida", "ia", "manual"), "repetido": r.estado == "repetido",
+                            "mensagem": ("Recebida." if r.estado in ("lida", "ia", "manual")
                                          else "Já tinha enviado este ficheiro." if r.estado == "repetido" else r.mensagem),
                             "fornecedor": r.fornecedor if r.fornecedor and not r.fornecedor.startswith("Fornecedor ") else None,
                             "total": r.total} for r in res]}

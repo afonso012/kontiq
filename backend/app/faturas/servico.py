@@ -27,7 +27,7 @@ from ..models import (
     RegistoAtividade, RegraFornecedor, Utilizador,
 )
 from ..models import enums as E
-from . import leitura
+from . import ia, leitura
 
 MAX_BYTES = 20 * 1024 * 1024
 MAX_FICHEIROS = 30
@@ -140,6 +140,9 @@ def revalidar(s: Session, f: Fatura, empresa: Empresa) -> None:
         if outra:
             quando = outra.criado_em.astimezone().strftime("%d/%m")
             extra.append(("duplicado", "erro", f"Já existe a {outra.numero} deste fornecedor, carregada a {quando}."))
+    if f.metodo_leitura == "ia" and f.confianca is not None and f.confianca < Decimal("0.8") and f.estado == "por_conferir":
+        extra.append(("confianca_baixa", "aviso",
+                      f"Lida automaticamente com {int(f.confianca * 100)}% de confiança: confirme os valores com o documento."))
     for codigo, nivel, mensagem in extra:
         novos[codigo] = type("P", (), {"codigo": codigo, "nivel": nivel, "mensagem": mensagem})()
 
@@ -215,8 +218,16 @@ def carregar(s: Session, gabinete_id, utilizador_id, empresa_id, ficheiros: list
             out.append(Resultado(nome, "lida", "Lida pelo código QR.", str(f.id), forn.nome if forn else None,
                                  f.numero, euros(f.total), "qr"))
         else:
-            f = _nova_fatura_manual(s, gabinete_id, empresa, doc, periodo)
-            out.append(Resultado(nome, "manual", "Sem código QR: preencha os dados ao conferir.", str(f.id), metodo="manual"))
+            x = ia.extrair(dados, mime, lido.texto, empresa.nif)
+            if x:
+                f = _fatura_da_ia(s, gabinete_id, empresa, doc, x, periodo)
+                forn = s.get(Fornecedor, f.fornecedor_id) if f.fornecedor_id else None
+                pct = int(x.confianca * 100)
+                out.append(Resultado(nome, "ia", f"Lida automaticamente ({pct}% de confiança): confirme ao conferir.", str(f.id),
+                                     forn.nome if forn else None, f.numero, euros(f.total) if f.total else None, "ia"))
+            else:
+                f = _nova_fatura_manual(s, gabinete_id, empresa, doc, periodo)
+                out.append(Resultado(nome, "manual", "Sem código QR: preencha os dados ao conferir.", str(f.id), metodo="manual"))
         _registar(s, f, utilizador_id, "carregada", {"documento": nome, "metodo": f.metodo_leitura})
     return out
 
@@ -226,6 +237,31 @@ def _nova_fatura_manual(s: Session, gabinete_id, empresa: Empresa, doc: Document
                criado_em=agora(), metodo_leitura="manual", tipo_documento="FT", estado="por_conferir", origem_classificacao="manual")
     s.add(f)
     s.flush()
+    revalidar(s, f, empresa)
+    return f
+
+
+def _fatura_da_ia(s: Session, gabinete_id, empresa: Empresa, doc: Documento, x, periodo: date) -> Fatura:
+    forn = _fornecedor(s, gabinete_id, x.pais, x.nif[:30], x.fornecedor) if x.nif else None
+    f = Fatura(gabinete_id=gabinete_id, empresa_id=empresa.id, documento_id=doc.id, fornecedor_id=forn.id if forn else None,
+               criado_em=agora(), periodo=(x.data or periodo).replace(day=1), tipo_documento=x.tipo, numero=x.numero,
+               data_emissao=x.data if x.data and x.data <= date.today() else None,
+               nif_fornecedor=x.nif[:30] if x.nif else None, pais_fornecedor=x.pais,
+               metodo_leitura="ia", confianca=x.confianca, estado="por_conferir", origem_classificacao="sugestao",
+               dados_extraidos={"modo": x.modo, "autoliquidacao": x.autoliquidacao},
+               tratamento_iva="autoliquidacao" if x.autoliquidacao else "por_definir")
+    for l in x.linhas:
+        tipo = TAXAS_PT.get(l.taxa.quantize(Decimal("1")) if l.taxa is not None else None) if l.taxa is not None else None
+        if l.taxa is not None and l.taxa == 0:
+            tipo = "isenta"
+        f.linhas_iva.append(LinhaIVA(gabinete_id=gabinete_id, espaco_fiscal="PT", tipo_taxa=tipo or "normal",
+                                     taxa=l.taxa, base=l.base, iva=l.iva))
+    f.base_total = sum((l.base for l in f.linhas_iva), Decimal("0"))
+    f.iva_total = sum((l.iva for l in f.linhas_iva), Decimal("0"))
+    f.total = x.total if x.total is not None else f.base_total + f.iva_total
+    s.add(f)
+    s.flush()
+    _aplicar_regra(s, f)
     revalidar(s, f, empresa)
     return f
 
@@ -302,7 +338,7 @@ def lista_empresa(s: Session, empresa_id, mes: date) -> dict:
             "nota_curta": ({"duplicado": "Possível duplicado", "nif_invalido": "NIF inválido",
                            "contas_nao_batem": "Totais não batem", "sem_data": "Sem data", "sem_total": "Sem total",
                            "iva_estrangeiro": "IVA estrangeiro", "adquirente_diferente": "Outro adquirente",
-                           "consumidor_final": "Consumidor final", "sem_nif": "Sem NIF"}.get(principal.codigo) if principal else None)
+                           "consumidor_final": "Consumidor final", "sem_nif": "Sem NIF", "confianca_baixa": "Confiança baixa"}.get(principal.codigo) if principal else None)
             if not _por_preencher(f) else "Por preencher",
         })
     n_ok = sum(1 for f in validas if f.estado in ("conferida", "exportada"))
@@ -358,6 +394,7 @@ def detalhe(s: Session, fatura_id) -> dict:
         "documento": {"id": str(doc.id), "nome": doc.nome_original, "tipo": doc.tipo_mime, "canal": doc.canal,
                       "recebido": doc.criado_em.isoformat()} if doc else None,
         "metodo": f.metodo_leitura, "confianca": float(f.confianca) if f.confianca is not None else None,
+        "modo_leitura": (f.dados_extraidos or {}).get("modo"),
         "fornecedor": {"nome": forn.nome if forn else "", "nif": f.nif_fornecedor or "", "pais": f.pais_fornecedor,
                        "faturas": n_forn, "conhecido": n_forn > 1},
         "tipo_documento": f.tipo_documento, "numero": f.numero or "", "atcud": f.atcud or "",

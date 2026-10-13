@@ -18,7 +18,7 @@ export function Origem({ metodo, confianca }: { metodo: string; confianca: numbe
   if (metodo === 'qr') return <span className="pf-src pf-src--qr">QR</span>
   if (metodo === 'ia') {
     const pct = Math.round((confianca ?? 0) * 100)
-    return <span className={`pf-src pf-src--ia${pct < 80 ? ' is-low' : ''}`}>IA {pct}%</span>
+    return <span className={`pf-src pf-src--ia${pct < 80 ? ' is-low' : ''}`} title="Lida automaticamente">Auto {pct}%</span>
   }
   return <span className="pf-src pf-src--man">Manual</span>
 }
@@ -196,10 +196,10 @@ function CarregarModal({ aberto, empresaId, periodo, empresa, fechar, conferir }
     }
   }
 
-  const prontas = fichs.filter((f) => f.r?.fatura_id && (f.estado === 'lida' || f.estado === 'manual'))
+  const prontas = fichs.filter((f) => f.r?.fatura_id && (f.estado === 'lida' || f.estado === 'ia' || f.estado === 'manual'))
   const aEnviar = fichs.some((f) => f.estado === 'a enviar')
-  const resumo = ['lida', 'manual', 'repetido', 'erro'].map((k) => [k, fichs.filter((f) => f.estado === k).length] as const).filter(([, n]) => n)
-  const nomes: Record<string, string> = { lida: 'lidas pelo QR', manual: 'para preencher', repetido: 'repetidos', erro: 'com erro' }
+  const resumo = ['lida', 'ia', 'manual', 'repetido', 'erro'].map((k) => [k, fichs.filter((f) => f.estado === k).length] as const).filter(([, n]) => n)
+  const nomes: Record<string, string> = { lida: 'lidas pelo QR', ia: 'lidas automaticamente', manual: 'para preencher', repetido: 'repetidos', erro: 'com erro' }
 
   return (
     <Gaveta aberto={aberto} fechar={fechar} titulo="Carregar faturas" subtitulo={`${empresa} · ${periodo.split('-').reverse().join('/')}`}
@@ -231,9 +231,10 @@ function CarregarModal({ aberto, empresaId, periodo, empresa, fechar, conferir }
                     <div className="ficheiro__nome pf-mono">{f.nome}</div>
                     {f.estado === 'a enviar'
                       ? <div className="barra mt8"><span className="barra__indet" /></div>
-                      : <div className="muted14">{f.estado === 'lida' ? [f.r?.fornecedor, f.r?.numero, f.r?.total].filter(Boolean).join(' · ') : f.r?.mensagem}</div>}
+                      : <div className="muted14">{f.estado === 'lida' || f.estado === 'ia' ? [f.r?.fornecedor, f.r?.numero, f.r?.total].filter(Boolean).join(' · ') : f.r?.mensagem}</div>}
                   </div>
                   {f.estado === 'lida' && <><span className="pf-src pf-src--qr">QR</span><span className="pf-pill pf-pill--ok">Lida</span></>}
+                  {f.estado === 'ia' && <><span className="pf-src pf-src--ia">Auto</span><span className="pf-pill pf-pill--ok">Lida</span></>}
                   {f.estado === 'manual' && <span className="pf-pill pf-pill--warn">Preencher</span>}
                   {f.estado === 'repetido' && <span className="pf-pill pf-pill--none">Repetido</span>}
                   {f.estado === 'erro' && <span className="pf-pill pf-pill--bad">Erro</span>}
@@ -243,7 +244,7 @@ function CarregarModal({ aberto, empresaId, periodo, empresa, fechar, conferir }
           </>
         )}
         <div className="dica">
-          <span>Faturas com o código QR da AT são lidas sozinhas. As outras entram para preencher ao conferir.</span>
+          <span>Faturas com o código QR da AT são lidas sozinhas. As outras são lidas automaticamente quando possível; confirme-as ao conferir.</span>
         </div>
       </div>
     </Gaveta>

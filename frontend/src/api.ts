@@ -136,7 +136,7 @@ export type ResumoPortal = {
 }
 
 export type ResultadoCarregar = {
-  nome: string; estado: 'lida' | 'manual' | 'repetido' | 'erro'; mensagem: string
+  nome: string; estado: 'lida' | 'ia' | 'manual' | 'repetido' | 'erro'; mensagem: string
   fatura_id: string | null; fornecedor: string | null; numero: string | null; total: string | null; metodo: string | null
 }
 
@@ -166,7 +166,7 @@ export type Fatura = {
   id: string; estado: 'por_conferir' | 'conferida' | 'exportada' | 'rejeitada'; estado_vista: EstadoFatura
   empresa: { id: string; nome: string; nif: string }; periodo: string
   documento: { id: string; nome: string; tipo: string; canal: string; recebido: string } | null
-  metodo: 'qr' | 'ia' | 'manual'; confianca: number | null
+  metodo: 'qr' | 'ia' | 'manual'; confianca: number | null; modo_leitura?: string | null
   fornecedor: { nome: string; nif: string; pais: string; faturas: number; conhecido: boolean }
   tipo_documento: string; numero: string; atcud: string; data: string; nif_adquirente: string | null
   linhas: { espaco: string; tipo_taxa: string; taxa: number | null; base: string; iva: string }[]
