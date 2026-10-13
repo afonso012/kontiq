@@ -32,9 +32,6 @@ export function AppLayout({ children, glow }: { children: ReactNode; glow?: bool
     definir(null)
     nav('/entrar', { replace: true })
   }
-  const emBreve = (nome: keyof typeof I, texto: string) => (
-    <span className="nav__item is-off" aria-disabled="true" title="Em breve"><Icone nome={nome} />{texto}<span className="nav__breve">em breve</span></span>
-  )
   return (
     <div className="shell">
       <nav className={`nav${menu ? ' is-aberto' : ''}`} aria-label="Navegação principal">
@@ -44,8 +41,8 @@ export function AppLayout({ children, glow }: { children: ReactNode; glow?: bool
         </div>
         <div className="nav__lista">
           <NavLink to="/painel" className={({ isActive }) => `nav__item${isActive ? ' on' : ''}`}><Icone nome="painel" />Painel</NavLink>
-          {emBreve('faturas', 'Faturas')}
-          {emBreve('pedidos', 'Pedidos')}
+          <NavLink to="/faturas" end className={({ isActive }) => `nav__item${isActive ? ' on' : ''}`}><Icone nome="faturas" />Faturas</NavLink>
+          <NavLink to="/pedidos" className={({ isActive }) => `nav__item${isActive ? ' on' : ''}`}><Icone nome="pedidos" />Pedidos</NavLink>
           <NavLink to="/exportacoes" className={({ isActive }) => `nav__item${isActive ? ' on' : ''}`}><Icone nome="exportar" />Exportações</NavLink>
           <NavLink to="/equipa" className={({ isActive }) => `nav__item${isActive ? ' on' : ''}`}><Icone nome="equipa" />Equipa</NavLink>
           <NavLink to="/subscricao" className={({ isActive }) => `nav__item${isActive ? ' on' : ''}`}><Icone nome="subscricao" />Subscrição</NavLink>

@@ -28,6 +28,8 @@
 - [x] Faturas da empresa, carregar PDFs/fotos e conferir (documento ao lado, fila, duplicados, regras)
 - [x] Portal do cliente: enviar faturas (foto ou ficheiro), ver o estado do que enviou e os pedidos do gabinete
 - [x] Dúvidas sobre uma fatura: o gabinete pergunta na conferência, o cliente é avisado e responde no portal, a resposta aparece no painel
+- [x] Faturas: todas as faturas do gabinete num mês, com filtros (estado, empresa) e pesquisa
+- [x] Pedidos: empresas sem faturas (pedir a todas de uma vez), dúvidas em aberto e histórico de pedidos
 - [ ] Email de entrada por empresa
 
 ## Fase 3 — Leitura com IA

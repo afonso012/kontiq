@@ -121,6 +121,14 @@ export const api = {
   simularPagamento: (id: string, sucesso: boolean) => pedido<PagamentoSub>('POST', `/api/subscricao/pagamentos/${id}/simular`, { sucesso }),
   cancelarSub: () => pedido<Subscricao>('POST', '/api/subscricao/cancelar'),
   retomarSub: () => pedido<Subscricao>('POST', '/api/subscricao/retomar'),
+  todasFaturas: (p: { periodo: string; filtro: string; q: string; empresa: string; inicio: number }) => {
+    const qs = new URLSearchParams({ periodo: p.periodo, filtro: p.filtro, inicio: String(p.inicio) })
+    if (p.q) qs.set('q', p.q)
+    if (p.empresa) qs.set('empresa', p.empresa)
+    return pedido<FaturasGabinete>('GET', `/api/faturas?${qs}`)
+  },
+  pedidos: (periodo: string) => pedido<Pedidos>('GET', `/api/pedidos?periodo=${encodeURIComponent(periodo)}`),
+  pedirTodas: (periodo: string) => pedido<{ enviados: { nome: string; canal: string }[]; ignoradas: { nome: string; motivo: string }[] }>('POST', '/api/pedidos/todas', { periodo }),
   equipa: () => pedido<Equipa>('GET', '/api/equipa'),
   convidarColega: (email: string, papel: string) => pedido<{ id: string; email: string }>('POST', '/api/equipa/convites', { email, papel }),
   reenviarConvite: (id: string) => pedido('POST', `/api/equipa/convites/${id}/reenviar`),
@@ -261,3 +269,21 @@ export type Equipa = {
   convites: { id: string; email: string; papel: string; papel_nome: string; criado_em: string; expira_em: string }[]
 }
 export type ConviteEquipa = { gabinete: string; email: string; papel: string; convidado_por: string | null; conta_existe: boolean }
+
+export type FaturasGabinete = {
+  periodo: string; periodo_txt: string; filtro: string; q: string
+  contagens: Record<'todas' | 'por_conferir' | 'problemas' | 'duvidas' | 'conferidas' | 'exportadas' | 'rejeitadas', number>
+  total: number; total_txt: string; mais: boolean
+  faturas: (LinhaFatura & { empresa: { id: string; nome: string }; estado_bd: string })[]
+  empresas: { id: string; nome: string }[]
+}
+export type Pedidos = {
+  periodo: string; periodo_txt: string
+  em_falta: { id: string; nome: string; nif: string; portal: boolean; pedido_em: string | null; meio: 'sms' | 'email' | null
+    contacto: { nome: string | null; telefone: string | null; email: string | null } }[]
+  pedidos: { id: string; empresa: { id: string; nome: string }; periodo: string; periodo_txt: string; canal: string
+    enviado_em: string; quem: string | null; respondido: boolean }[]
+  duvidas: { fatura_id: string; estado: 'pergunta' | 'resposta'; empresa: { id: string; nome: string }; fornecedor: string | null
+    numero: string | null; total: string | null; ultima: { texto: string; lado: 'gabinete' | 'cliente'; em: string } | null }[]
+  contagens: { em_falta: number; respostas: number; a_espera: number }
+}

@@ -478,3 +478,17 @@ a.pf-btn { text-decoration: none; }
 .checkout__linhas div { display: flex; justify-content: space-between; font-size: 15px; }
 .checkout__total { font-size: 20px !important; font-weight: 500; border-top: 1px solid var(--line); padding-top: 10px; }
 @media (max-width: 1100px) { .planos { grid-template-columns: 1fr; } .sub-atual { grid-template-columns: 1fr; } }
+
+/* Faturas (todas) e Pedidos */
+.filtro-empresa { min-width: 200px; max-width: 260px; height: 44px; }
+.tabela-faturas-todas { min-width: 920px; }
+.lista-pedidos { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; }
+.lista-pedidos li { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-top: 1px solid var(--line); }
+.lista-pedidos li:first-child { border-top: 0; }
+.lista-pedidos li.is-nova { background: var(--brand-soft); }
+.acoes-faturas { align-items: center; }
+@media (min-width: 1100px) { .acoes-faturas { flex-wrap: nowrap; } .acoes-faturas .procura input { width: 300px; } }
+.filtro-empresa { border-radius: 999px; padding-left: 16px; }
+.pf-tabs { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.pf-tabs::-webkit-scrollbar { display: none; }
+.pf-tab { white-space: nowrap; flex: none; }

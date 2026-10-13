@@ -6,7 +6,7 @@ import { Aviso } from '../components/ui'
 import { mudarPeriodo, periodoAtual } from '../util'
 import { EmpresaGaveta } from './EmpresaGaveta'
 
-const ESTADOS: Record<EstadoFatura, [string, string]> = {
+export const ESTADOS: Record<EstadoFatura, [string, string]> = {
   bad: ['Com problemas', 'pf-pill pf-pill--bad'], warn: ['Por conferir', 'pf-pill pf-pill--warn'],
   ok: ['Conferida', 'pf-pill pf-pill--ok'], rejeitada: ['Rejeitada', 'pf-pill pf-pill--none'],
 }

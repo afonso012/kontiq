@@ -311,6 +311,29 @@ def _estado_vista(f: Fatura) -> str:
     return "bad" if any(p.nivel == "erro" and not p.resolvido for p in f.problemas) else "warn"
 
 
+NOTAS_CURTAS = {"duplicado": "Possível duplicado", "nif_invalido": "NIF inválido", "contas_nao_batem": "Totais não batem",
+                "sem_data": "Sem data", "sem_total": "Sem total", "iva_estrangeiro": "IVA estrangeiro",
+                "adquirente_diferente": "Outro adquirente", "consumidor_final": "Consumidor final", "sem_nif": "Sem NIF",
+                "confianca_baixa": "Confiança baixa"}
+
+
+def _linha(f: Fatura, fornecedores: dict, contas: dict) -> dict:
+    abertos = [p for p in f.problemas if not p.resolvido]
+    principal = next((p for p in abertos if p.nivel == "erro"), None) or next(
+        (p for p in abertos if p.codigo != "sem_classificacao"), None)
+    return {
+        "id": str(f.id), "data": f.data_emissao.isoformat() if f.data_emissao else None,
+        "fornecedor": fornecedores.get(f.fornecedor_id) or (f"NIF {f.nif_fornecedor}" if f.nif_fornecedor else None),
+        "nif": f.nif_fornecedor, "numero": f.numero, "tipo": f.tipo_documento, "metodo": f.metodo_leitura,
+        "confianca": float(f.confianca) if f.confianca is not None else None,
+        "conta": f.conta_codigo, "conta_nome": contas.get(f.conta_codigo) if f.conta_codigo else None,
+        "iva": euros(f.iva_total), "total": euros(f.total), "total_n": float(f.total),
+        "estado": _estado_vista(f), "nota": principal.mensagem if principal else None,
+        "por_preencher": _por_preencher(f), "exportada": f.estado == "exportada", "duvida": f.duvida,
+        "nota_curta": (NOTAS_CURTAS.get(principal.codigo) if principal else None) if not _por_preencher(f) else "Por preencher",
+    }
+
+
 def lista_empresa(s: Session, empresa_id, mes: date) -> dict:
     e = _empresa(s, empresa_id)
     mes = mes.replace(day=1)
@@ -323,24 +346,7 @@ def lista_empresa(s: Session, empresa_id, mes: date) -> dict:
                        .where(AcessoPortal.empresa_id == e.id).limit(1)).scalar()
     linhas, validas = [], [f for f in faturas if f.estado != "rejeitada"]
     for f in faturas:
-        abertos = [p for p in f.problemas if not p.resolvido]
-        principal = next((p for p in abertos if p.nivel == "erro"), None) or next(
-            (p for p in abertos if p.codigo != "sem_classificacao"), None)
-        linhas.append({
-            "id": str(f.id), "data": f.data_emissao.isoformat() if f.data_emissao else None,
-            "fornecedor": fornecedores.get(f.fornecedor_id) or (f"NIF {f.nif_fornecedor}" if f.nif_fornecedor else None),
-            "nif": f.nif_fornecedor, "numero": f.numero, "tipo": f.tipo_documento, "metodo": f.metodo_leitura,
-            "confianca": float(f.confianca) if f.confianca is not None else None,
-            "conta": f.conta_codigo, "conta_nome": contas.get(f.conta_codigo) if f.conta_codigo else None,
-            "iva": euros(f.iva_total), "total": euros(f.total), "total_n": float(f.total),
-            "estado": _estado_vista(f), "nota": principal.mensagem if principal else None,
-            "por_preencher": _por_preencher(f), "exportada": f.estado == "exportada", "duvida": f.duvida,
-            "nota_curta": ({"duplicado": "Possível duplicado", "nif_invalido": "NIF inválido",
-                           "contas_nao_batem": "Totais não batem", "sem_data": "Sem data", "sem_total": "Sem total",
-                           "iva_estrangeiro": "IVA estrangeiro", "adquirente_diferente": "Outro adquirente",
-                           "consumidor_final": "Consumidor final", "sem_nif": "Sem NIF", "confianca_baixa": "Confiança baixa"}.get(principal.codigo) if principal else None)
-            if not _por_preencher(f) else "Por preencher",
-        })
+        linhas.append(_linha(f, fornecedores, contas))
     n_ok = sum(1 for f in validas if f.estado in ("conferida", "exportada"))
     s_conf = get_settings()
     return {
@@ -357,6 +363,60 @@ def lista_empresa(s: Session, empresa_id, mes: date) -> dict:
             "por_preencher": sum(1 for f in validas if _por_preencher(f) and f.estado == "por_conferir"),
         },
         "faturas": linhas,
+    }
+
+
+FILTROS = ("todas", "por_conferir", "problemas", "duvidas", "conferidas", "exportadas", "rejeitadas")
+
+
+def _no_filtro(f: Fatura, filtro: str) -> bool:
+    return {
+        "todas": True,
+        "por_conferir": f.estado == "por_conferir",
+        "problemas": f.estado == "por_conferir" and _estado_vista(f) == "bad",
+        "duvidas": f.duvida is not None,
+        "conferidas": f.estado == "conferida",
+        "exportadas": f.estado == "exportada",
+        "rejeitadas": f.estado == "rejeitada",
+    }[filtro]
+
+
+def lista_gabinete(s: Session, mes: date, filtro: str = "todas", q: str = "", empresa_id=None,
+                   limite: int = 100, inicio: int = 0) -> dict:
+    """Todas as faturas do gabinete num mês, com contagens por filtro e pesquisa."""
+    if filtro not in FILTROS:
+        raise ErroAuth(422, "filtro_invalido", "Filtro desconhecido.")
+    mes = mes.replace(day=1)
+    consulta = (select(Fatura, Empresa.nome, Empresa.id).join(Empresa, Empresa.id == Fatura.empresa_id)
+                .outerjoin(Fornecedor, Fornecedor.id == Fatura.fornecedor_id)
+                .where(Fatura.periodo == mes, Fatura.eliminada_em.is_(None)))
+    if empresa_id:
+        consulta = consulta.where(Fatura.empresa_id == empresa_id)
+    termo = " ".join((q or "").split())[:80]
+    if termo:
+        like = f"%{termo}%"
+        digitos = "".join(ch for ch in termo if ch.isdigit())
+        conds = [Fornecedor.nome.ilike(like), Empresa.nome.ilike(like), Fatura.numero.ilike(like)]
+        if len(digitos) >= 3:
+            conds += [Fatura.nif_fornecedor.like(f"%{digitos}%"), Empresa.nif.like(f"%{digitos}%")]
+        consulta = consulta.where(or_(*conds))
+    linhas = s.execute(consulta.order_by(Fatura.data_emissao.desc().nulls_first(), Fatura.criado_em.desc(), Fatura.id)).all()
+    contagens = {k: sum(1 for f, _, _ in linhas if _no_filtro(f, k)) for k in FILTROS}
+    escolhidas = [(f, nome, eid) for f, nome, eid in linhas if _no_filtro(f, filtro)]
+    pagina = escolhidas[inicio:inicio + limite]
+    fornecedores = {x.id: x.nome for x in s.scalars(select(Fornecedor).where(
+        Fornecedor.id.in_([f.fornecedor_id for f, _, _ in pagina if f.fornecedor_id])))} if pagina else {}
+    contas = dict(s.execute(select(ContaSNC.codigo, ContaSNC.descricao)).all())
+    validas = [f for f, _, _ in escolhidas if f.estado != "rejeitada"]
+    empresas = s.execute(select(Empresa.id, Empresa.nome).order_by(Empresa.nome)).all()
+    return {
+        "periodo": mes.isoformat(), "periodo_txt": f"{MESES[mes.month - 1]} de {mes.year}",
+        "filtro": filtro, "q": termo, "contagens": contagens,
+        "total": len(escolhidas), "total_txt": euros(sum((f.total for f in validas), Decimal("0"))),
+        "faturas": [{**_linha(f, fornecedores, contas), "empresa": {"id": str(eid), "nome": nome},
+                     "estado_bd": f.estado} for f, nome, eid in pagina],
+        "mais": len(escolhidas) > inicio + limite,
+        "empresas": [{"id": str(i), "nome": n} for i, n in empresas],
     }
 
 

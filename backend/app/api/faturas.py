@@ -66,6 +66,14 @@ async def carregar(empresa_id: uuid.UUID, ficheiros: list[UploadFile] = File(...
 
 
 
+@router.get("/api/faturas")
+def todas(periodo: str | None = Query(None), filtro: str = Query("todas"), q: str = Query("", max_length=80),
+          empresa: uuid.UUID | None = Query(None), inicio: int = Query(0, ge=0),
+          atual: SessaoAtual = Depends(exigir_gabinete)) -> dict:
+    """Todas as faturas do gabinete num mês, com filtros e pesquisa."""
+    return _no_gabinete(atual, lambda s: svc.lista_gabinete(s, _mes(periodo), filtro, q, empresa, 100, inicio))
+
+
 @router.get("/api/faturas/{fatura_id}")
 def ver(fatura_id: uuid.UUID, atual: SessaoAtual = Depends(exigir_gabinete)) -> dict:
     return _no_gabinete(atual, lambda s: svc.detalhe(s, fatura_id))

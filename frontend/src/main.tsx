@@ -13,6 +13,8 @@ import ConferirFatura from './pages/ConferirFatura'
 import Exportacoes from './pages/Exportacoes'
 import Equipa from './pages/Equipa'
 import Convite from './pages/Convite'
+import Faturas from './pages/Faturas'
+import Pedidos from './pages/Pedidos'
 import Subscricao, { PagamentoSimulado } from './pages/Subscricao'
 import Portal from './pages/Portal'
 import Recuperar from './pages/Recuperar'
@@ -37,6 +39,8 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/confirmar-email" element={<Exige tipo="gabinete-por-confirmar"><ConfirmarEmail /></Exige>} />
           <Route path="/painel" element={<Exige tipo="gabinete"><Painel /></Exige>} />
           <Route path="/empresas/:id" element={<Exige tipo="gabinete"><EmpresaFaturas /></Exige>} />
+          <Route path="/faturas" element={<Exige tipo="gabinete"><Faturas /></Exige>} />
+          <Route path="/pedidos" element={<Exige tipo="gabinete"><Pedidos /></Exige>} />
           <Route path="/faturas/:id" element={<Exige tipo="gabinete"><ConferirFatura /></Exige>} />
           <Route path="/exportacoes" element={<Exige tipo="gabinete"><Exportacoes /></Exige>} />
           <Route path="/equipa" element={<Exige tipo="gabinete"><Equipa /></Exige>} />

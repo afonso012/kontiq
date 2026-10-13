@@ -90,3 +90,21 @@ def pedir_faturas(empresa_id: uuid.UUID, corpo: PedirFaturas, atual: SessaoAtual
     """Envia ao contacto da empresa um lembrete das faturas do mês em falta."""
     mes = _mes(corpo.periodo)
     return _executar(atual, lambda s: svc.pedir_faturas(s, atual.gabinete_id, atual.utilizador_id, empresa_id, mes))
+
+
+# ---------------------------------------------------------------- pedidos aos clientes
+
+class PeriodoCorpo(BaseModel):
+    periodo: str | None = None
+
+
+@router.get("/api/pedidos")
+def pedidos(periodo: str | None = Query(None), atual: SessaoAtual = Depends(exigir_gabinete)) -> dict:
+    from ..empresas import pedidos as ped
+    return _executar(atual, lambda s: ped.listar(s, atual.gabinete_id, _mes(periodo)))
+
+
+@router.post("/api/pedidos/todas")
+def pedir_todas(corpo: PeriodoCorpo, atual: SessaoAtual = Depends(exigir_gabinete)) -> dict:
+    from ..empresas import pedidos as ped
+    return _executar(atual, lambda s: ped.pedir_a_todas(s, atual.gabinete_id, atual.utilizador_id, _mes(corpo.periodo)))
