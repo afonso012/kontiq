@@ -44,6 +44,8 @@ export default function Equipa() {
         )}
       </header>
 
+      <ResumoSemanal avisar={aviso.mostrar} />
+
       <section className="bloco" aria-labelledby="eq-membros">
         <h2 id="eq-membros" className="bloco__titulo">Membros</h2>
         <div className="tabela-caixa">
@@ -166,5 +168,36 @@ function ConvidarGaveta({ aberto, fechar, enviado }: { aberto: boolean; fechar: 
         <button type="submit" hidden />
       </form>
     </Gaveta>
+  )
+}
+
+function ResumoSemanal({ avisar }: { avisar: (m: string, t?: 'ok' | 'bad') => void }) {
+  const [r, setR] = useState<{ ativo: boolean; enviado_em: string | null } | null>(null)
+  const [aEnviar, setAEnviar] = useState(false)
+  useEffect(() => { api.resumoSemanal().then(setR).catch(() => {}) }, [])
+  if (!r) return null
+  async function mudar(ativo: boolean) {
+    try { setR({ ...r!, ...(await api.mudarResumoSemanal(ativo)) }); avisar(ativo ? 'Vai receber o resumo à segunda-feira.' : 'Deixa de receber o resumo semanal.') }
+    catch (e) { avisar(e instanceof ErroApi ? e.message : 'Não foi possível mudar.', 'bad') }
+  }
+  async function enviar() {
+    setAEnviar(true)
+    try { const x = await api.enviarResumo(); avisar(`Resumo enviado para ${x.email}.`); setR({ ...r!, enviado_em: new Date().toISOString() }) }
+    catch (e) { avisar(e instanceof ErroApi ? e.message : 'Não foi possível enviar.', 'bad') }
+    finally { setAEnviar(false) }
+  }
+  return (
+    <section className="resumo-semanal" aria-label="Resumo semanal por email">
+      <label className="interruptor">
+        <input type="checkbox" role="switch" checked={r.ativo} onChange={(e) => mudar(e.target.checked)} />
+        <span className="interruptor__pista" aria-hidden="true"><span /></span>
+      </label>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="forte15">Resumo semanal por email</div>
+        <div className="muted14">À segunda-feira: respostas dos clientes, faturas por conferir, quem ainda não enviou e o que falta do e-Fatura.{r.enviado_em ? ` Último envio ${quando(r.enviado_em).toLowerCase()}.` : ''}</div>
+      </div>
+      <a className="pf-btn pf-btn--sm pf-btn--ghost" href="/api/resumo/pre-visualizar" target="_blank" rel="noreferrer">Ver exemplo</a>
+      <button type="button" className="pf-btn pf-btn--sm" disabled={aEnviar} onClick={enviar}>{aEnviar ? 'A enviar…' : 'Enviar-me agora'}</button>
+    </section>
   )
 }

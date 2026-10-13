@@ -159,6 +159,9 @@ export const api = {
   pedirEfatura: (eid: string, periodo: string) => pedido<{ canal: string; faturas: number }>('POST', `/api/empresas/${eid}/efatura/pedir`, { periodo }),
   resumoIva: (eid: string, periodo: string, tipo?: string) =>
     pedido<ResumoIva>('GET', `/api/empresas/${eid}/iva?periodo=${encodeURIComponent(periodo)}${tipo ? `&tipo=${tipo}` : ''}`),
+  resumoSemanal: () => pedido<{ ativo: boolean; enviado_em: string | null }>('GET', '/api/resumo'),
+  mudarResumoSemanal: (ativo: boolean) => pedido<{ ativo: boolean }>('PUT', '/api/resumo', { ativo }),
+  enviarResumo: () => pedido<{ email: string }>('POST', '/api/resumo/enviar'),
   equipa: () => pedido<Equipa>('GET', '/api/equipa'),
   convidarColega: (email: string, papel: string) => pedido<{ id: string; email: string }>('POST', '/api/equipa/convites', { email, papel }),
   reenviarConvite: (id: string) => pedido('POST', `/api/equipa/convites/${id}/reenviar`),

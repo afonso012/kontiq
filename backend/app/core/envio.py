@@ -32,7 +32,8 @@ def _html(titulo: str, paragrafos: list[str], codigo: str | None) -> str:
     )
 
 
-def enviar_email(destino: str, assunto: str, titulo: str, paragrafos: list[str], codigo: str | None = None) -> bool:
+def enviar_email(destino: str, assunto: str, titulo: str, paragrafos: list[str], codigo: str | None = None,
+                 html: str | None = None) -> bool:
     s = get_settings()
     msg = EmailMessage()
     msg["From"] = s.email_remetente
@@ -40,7 +41,7 @@ def enviar_email(destino: str, assunto: str, titulo: str, paragrafos: list[str],
     msg["Subject"] = assunto
     texto = "\n\n".join([titulo, *paragrafos] + ([f"Código: {codigo}"] if codigo else []))
     msg.set_content(texto)
-    msg.add_alternative(_html(titulo, paragrafos, codigo), subtype="html")
+    msg.add_alternative(html or _html(titulo, paragrafos, codigo), subtype="html")
     try:
         with smtplib.SMTP(s.smtp_host, s.smtp_port, timeout=5) as smtp:
             if s.smtp_tls:

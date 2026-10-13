@@ -76,6 +76,8 @@ class MembroGabinete(ComId, ComDatas, Base):
     gabinete_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("gabinetes.id", ondelete="CASCADE"))
     utilizador_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("utilizadores.id", ondelete="CASCADE"), index=True)
     papel: Mapped[str] = mapped_column(String(20), server_default="colaborador")
+    resumo_semanal: Mapped[bool] = mapped_column(Boolean, server_default=text("true"))
+    resumo_enviado_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     gabinete: Mapped[Gabinete] = relationship(back_populates="membros")
 

@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { api, ErroApi, type DuvidaPortal, type PortalInicio as Dados } from '../api'
 import { Aviso } from '../components/ui'
 import { Escrever, Mensagens } from '../components/conversa'
+import { ConviteInstalar } from '../components/instalar'
 import { useSessao } from '../sessao'
 import { quando } from '../util'
 
@@ -21,6 +22,10 @@ export default function PortalInicio() {
   const ficheiros = useRef<HTMLInputElement>(null)
   const { definir } = useSessao()
   const nav = useNavigate()
+  const [qs] = useSearchParams()
+  // Atalho "Tirar foto" do ícone instalado: o browser não deixa abrir a câmara sozinho, por isso destacamos o botão.
+  const destacarFoto = qs.get('acao') === 'foto'
+  useEffect(() => { if (destacarFoto) camara.current?.parentElement?.querySelector<HTMLButtonElement>('.portal__foto')?.focus() }, [destacarFoto])
 
   const ler = useCallback(() => {
     api.portalInicio().then(setD).catch((e) => setErro(e instanceof ErroApi ? e.message : 'Não foi possível abrir o portal.'))
@@ -86,7 +91,9 @@ export default function PortalInicio() {
           </section>
         )}
 
-        <button type="button" className="pf-btn pf-btn--primary botao-grande portal__foto" onClick={() => camara.current?.click()} disabled={aEnviar}>
+        <ConviteInstalar />
+
+        <button type="button" className={`pf-btn pf-btn--primary botao-grande portal__foto${destacarFoto ? ' is-destaque' : ''}`} onClick={() => camara.current?.click()} disabled={aEnviar}>
           <span>Tirar foto a uma fatura</span>
           <span className="pf-btn__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg></span>
         </button>

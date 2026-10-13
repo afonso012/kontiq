@@ -30,6 +30,8 @@
 - [x] Dúvidas sobre uma fatura: o gabinete pergunta na conferência, o cliente é avisado e responde no portal, a resposta aparece no painel
 - [x] Faturas: todas as faturas do gabinete num mês, com filtros (estado, empresa) e pesquisa
 - [x] Pedidos: empresas sem faturas (pedir a todas de uma vez), dúvidas em aberto e histórico de pedidos
+- [x] Portal do cliente instalável no telemóvel (manifesto, ícones, service worker; instalação completa precisa de HTTPS)
+- [x] Resumo semanal por email às pessoas do gabinete (python -m app.resumo, agendar à segunda de manhã)
 - [ ] Email de entrada por empresa
 
 ## Fase 3 — Leitura com IA

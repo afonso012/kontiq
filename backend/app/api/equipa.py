@@ -78,3 +78,58 @@ def aceitar(token: str, corpo: Aceitar, request: Request, response: Response) ->
     trocar_sessao(request)
     por_cookie(response, sessao, persistente=False)
     return {"ok": True}
+
+
+# ---------------------------------------------------------------- resumo semanal por email
+
+class Preferencia(BaseModel):
+    ativo: bool
+
+
+def _membro(s, atual: SessaoAtual):
+    from sqlalchemy import select
+    from ..models import MembroGabinete
+    return s.scalar(select(MembroGabinete).where(MembroGabinete.gabinete_id == atual.gabinete_id,
+                                                 MembroGabinete.utilizador_id == atual.utilizador_id))
+
+
+@router.get("/api/resumo")
+def ver_resumo(atual: SessaoAtual = Depends(exigir_gabinete)) -> dict:
+    def f(s):
+        m = _membro(s, atual)
+        return {"ativo": m.resumo_semanal, "enviado_em": m.resumo_enviado_em.isoformat() if m.resumo_enviado_em else None}
+    return _no_gabinete(atual, f)
+
+
+@router.put("/api/resumo")
+def mudar_resumo(corpo: Preferencia, atual: SessaoAtual = Depends(exigir_gabinete)) -> dict:
+    def f(s):
+        m = _membro(s, atual)
+        m.resumo_semanal = corpo.ativo
+        return {"ativo": m.resumo_semanal}
+    return _no_gabinete(atual, f)
+
+
+@router.post("/api/resumo/enviar")
+def enviar_resumo(atual: SessaoAtual = Depends(exigir_gabinete)) -> dict:
+    """Envia já o resumo à própria pessoa (para ver como fica)."""
+    from .. import resumo
+    from ..models import Utilizador
+
+    def f(s):
+        m = _membro(s, atual)
+        u = s.get(Utilizador, atual.utilizador_id)
+        resumo.enviar_a(s, m, u, forcar=True)
+        return {"email": u.email}
+    return _no_gabinete(atual, f)
+
+
+@router.get("/api/resumo/pre-visualizar")
+def ver_resumo_html(atual: SessaoAtual = Depends(exigir_gabinete)):
+    from fastapi.responses import HTMLResponse
+    from .. import resumo
+    from ..models import Utilizador
+
+    def f(s):
+        return resumo.mensagem(resumo.dados(s, atual.gabinete_id), s.get(Utilizador, atual.utilizador_id).nome)[1]
+    return HTMLResponse(_no_gabinete(atual, f), headers={"Cache-Control": "no-store", "X-Frame-Options": "SAMEORIGIN"})

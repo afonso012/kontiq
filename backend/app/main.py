@@ -6,6 +6,7 @@
 - Tudo o resto: a aplicação web (frontend/dist), se tiver sido construída.
 """
 import logging
+import mimetypes
 import uuid
 from datetime import date
 from pathlib import Path
@@ -50,6 +51,7 @@ app.include_router(equipa_router)
 app.include_router(subscricao_router)
 
 FRONTEND = Path(__file__).resolve().parents[2] / "frontend" / "dist"
+mimetypes.add_type("application/manifest+json", ".webmanifest")
 
 
 @app.exception_handler(ErroAuth)
