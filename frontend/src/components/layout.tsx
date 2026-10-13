@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Marca } from './ui'
 
 /** Ecrã de entrada: formulário à esquerda, painel de marca à direita (por baixo no telemóvel). */
@@ -18,31 +18,75 @@ export function AuthLayout({ topo, children, aside }: { topo?: ReactNode; childr
   )
 }
 
+/** Três lugares com cartões que vão trocando, um de cada vez: o produto a trabalhar. */
+const VITRINE: ReactNode[][] = [
+  [
+    <>
+      <div className="linha"><span className="pf-mono muted12">FT 2026/0457</span><span className="pf-src pf-src--qr">QR</span></div>
+      <div className="flut__nome">Papelaria e Escritório Sado, Lda</div>
+      <div className="linha mt14"><span className="muted13">6222 · Material de escritório</span><span className="pf-mono flut__valor">95,82 €</span></div>
+    </>,
+    <>
+      <div className="linha"><span className="muted12">e-Fatura · outubro</span><span className="pf-pill pf-pill--warn">Falta</span></div>
+      <div className="flut__nome">EDP Comercial, SA</div>
+      <div className="linha mt14"><span className="muted13">Está nas Finanças, ainda não chegou</span><span className="pf-mono flut__valor">87,45 €</span></div>
+    </>,
+  ],
+  [
+    <>
+      <div className="muted12">Outubro · Restaurante O Faroleiro</div>
+      <div className="linha mt10"><span className="pf-mono grande">14 / 14</span><span className="pf-pill pf-pill--ok">Completa</span></div>
+      <div className="barra mt14"><span style={{ width: '100%' }} /></div>
+    </>,
+    <>
+      <div className="muted12">Exportação · TOConline</div>
+      <div className="linha mt10"><span className="pf-mono grande">42</span><span className="pf-pill pf-pill--ok">Pronta</span></div>
+      <div className="muted13 mt10">lançamentos de outubro, prontos a importar</div>
+    </>,
+  ],
+  [
+    <><span className="pf-alert__tag erro">Erro</span><span className="muted13 ink">Possível duplicado de <span className="pf-mono">FT 2026/8120</span></span></>,
+    <><span className="pf-alert__tag resposta">Resposta</span><span className="muted13 ink">Sr. Joaquim: «Foi para o restaurante, material da cozinha.»</span></>,
+  ],
+]
+
+function Vitrine() {
+  const [ativos, setAtivos] = useState([0, 0, 0])
+  const [parado, setParado] = useState(false)
+  useEffect(() => {
+    if (parado || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    let passo = 0
+    const t = setInterval(() => {
+      if (document.hidden) return
+      const lugar = passo % VITRINE.length
+      passo++
+      setAtivos((a) => a.map((v, i) => (i === lugar ? (v + 1) % VITRINE[i].length : v)))
+    }, 2800)
+    return () => clearInterval(t)
+  }, [parado])
+  return (
+    <div className="flutuantes" aria-hidden="true" onMouseEnter={() => setParado(true)} onMouseLeave={() => setParado(false)}>
+      {VITRINE.map((cartoes, lugar) => (
+        <div key={lugar} className={`flut flut--${lugar + 1}`}>
+          {cartoes.map((c, i) => (
+            <div key={i} className={`pf-glass flut__cartao${i === ativos[lugar] ? ' is-ativo' : ''}`}>{c}</div>
+          ))}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function AsideEntrar() {
   return (
     <>
-      <div>
+      <div className="aside__texto">
         <span className="pf-pill pf-pill--new">Novo</span>
         <span className="aside__sub">Leitura automática do código QR da AT</span>
         <h2 className="aside__titulo">As faturas dos clientes, <span className="pf-hl">conferidas</span> sozinhas</h2>
         <p className="aside__lead">Recolha, leitura e classificação SNC das faturas de compras, prontas a entrar no programa de contabilidade.</p>
       </div>
-      <div className="flutuantes" aria-hidden="true">
-        <div className="pf-glass flut flut--1">
-          <div className="linha"><span className="pf-mono muted12">FT 2026/0457</span><span className="pf-src pf-src--qr">QR</span></div>
-          <div className="flut__nome">Papelaria e Escritório Sado, Lda</div>
-          <div className="linha mt14"><span className="muted13">6222 · Material de escritório</span><span className="pf-mono" style={{ whiteSpace: 'nowrap', fontSize: 15 }}>95,82 €</span></div>
-        </div>
-        <div className="pf-glass flut flut--2">
-          <div className="muted12">Outubro · Restaurante O Faroleiro</div>
-          <div className="linha mt10"><span className="pf-mono grande">14 / 14</span><span className="pf-pill pf-pill--ok">Completa</span></div>
-          <div className="barra mt14"><span style={{ width: '100%' }} /></div>
-        </div>
-        <div className="pf-glass flut flut--3">
-          <span className="pf-alert__tag erro">Erro</span>
-          <span className="muted13 ink">Possível duplicado de <span className="pf-mono">FT 2026/8120</span></span>
-        </div>
-      </div>
+      <Vitrine />
     </>
   )
 }

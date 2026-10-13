@@ -89,10 +89,11 @@ button { font-family: inherit; }
 .aside__titulo { margin: 24px 0 0; font-size: 52px; line-height: 1.04; font-weight: 500; letter-spacing: -0.035em; max-width: 560px; }
 .aside__lead { margin: 20px 0 0; max-width: 440px; color: var(--ink-muted); font-size: 16px; line-height: 24px; }
 .flutuantes { position: relative; height: 300px; }
-.flut { position: absolute; }
-.flut--1 { left: 0; top: 40px; width: 280px; transform: rotate(-3deg); }
-.flut--2 { right: 0; top: 0; width: 250px; transform: rotate(2deg); }
-.flut--3 { right: 40px; bottom: 0; width: 300px; padding: 14px 18px; display: flex; gap: 12px; align-items: center; }
+.flut { position: absolute; display: grid; --r: 0deg; transform: rotate(var(--r)); }
+.flut--1 { left: 0; top: 40px; width: 280px; --r: -3deg; }
+.flut--2 { right: 0; top: 0; width: 250px; --r: 2deg; }
+.flut--3 { right: 40px; bottom: 0; width: 300px; }
+.flut--3 .flut__cartao { padding: 14px 18px; display: flex; gap: 12px; align-items: center; }
 .flut__nome { font-weight: 600; font-size: 15px; margin-top: 8px; }
 .flut .grande { font-size: 24px; letter-spacing: -0.02em; }
 .pf-alert__tag.erro { background: var(--danger); color: var(--surface); flex: none; }
@@ -180,7 +181,8 @@ button { font-family: inherit; }
 .flutuantes { height: clamp(300px, 22vw, 400px); max-width: 760px; }
 .flut--1 { width: clamp(280px, 19vw, 360px); top: 18%; }
 .flut--2 { width: clamp(250px, 16vw, 320px); }
-.flut--3 { width: clamp(300px, 19vw, 380px); padding: 16px 20px; }
+.flut--3 { width: clamp(300px, 19vw, 380px); }
+.flut--3 .flut__cartao { padding: 16px 20px; }
 .flut .muted12 { font-size: 13px; } .flut .muted13 { font-size: 14px; }
 .flut__nome { font-size: clamp(15px, 1.05vw, 18px); }
 .flut .grande { font-size: clamp(24px, 1.8vw, 32px); }
@@ -558,3 +560,67 @@ a.pf-btn { text-decoration: none; }
 .em-falta li { display: flex; flex-direction: column; }
 .em-falta__det { display: flex; flex-wrap: wrap; gap: 0 12px; color: var(--ink-muted); }
 .em-falta .pf-mono { font-size: 13px; white-space: nowrap; }
+
+/* ---------------------------------------------------------------
+   Movimento: curto e discreto. Desliga-se para quem pede menos movimento.
+   --------------------------------------------------------------- */
+:root { --ease: cubic-bezier(.2, .8, .2, 1); --dur-1: 140ms; --dur-2: 220ms; --dur-3: 600ms; }
+
+/* Vitrine do ecrã de entrada: cartões empilhados, só um visível em cada lugar */
+.flut__cartao { grid-area: 1 / 1; opacity: 0; transform: translateY(14px) scale(.97); pointer-events: none;
+  transition: opacity var(--dur-3) var(--ease), transform var(--dur-3) var(--ease); }
+.flut__cartao.is-ativo { opacity: 1; transform: none; }
+.flut--1 .flut__cartao, .flut--2 .flut__cartao { display: flex; flex-direction: column; justify-content: center; }
+.flut__valor { font-size: 15px; white-space: nowrap; }
+.pf-alert__tag.resposta { background: var(--brand); color: var(--on-brand); flex: none; }
+
+/* Estados que mudam suavemente */
+.pf-btn { transition: background-color var(--dur-1), border-color var(--dur-1), box-shadow var(--dur-2), transform var(--dur-1) var(--ease), filter var(--dur-1); }
+.pf-btn:active:not(:disabled) { transform: scale(.98); }
+.pf-btn--primary:hover:not(:disabled) { box-shadow: 0 6px 18px -8px var(--brand); }
+.pf-btn__arrow { transition: transform var(--dur-2) var(--ease); }
+.pf-btn:hover:not(:disabled) .pf-btn__arrow { transform: translate(2px, -2px); }
+.pf-field__input, select, textarea { transition: border-color var(--dur-1), box-shadow var(--dur-2); }
+.pf-field__input:hover:not(:focus) { border-color: var(--ink-muted); }
+.pf-tab, .nav__item, .opt { transition: background-color var(--dur-1), color var(--dur-1), box-shadow var(--dur-2); }
+.pf-table td { transition: background-color var(--dur-1); }
+.barra span { transition: width .8s var(--ease); }
+.check input, .interruptor__pista { transition: background-color var(--dur-1); }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Cada página entra com um pequeno deslize, em cascata */
+  .shell__cartao > *, .auth__centro > *, .portal__form > * { animation: subir .45s var(--ease) backwards; }
+  .shell__cartao > *:nth-child(2), .portal__form > *:nth-child(2) { animation-delay: 50ms; }
+  .shell__cartao > *:nth-child(3), .portal__form > *:nth-child(3) { animation-delay: 100ms; }
+  .shell__cartao > *:nth-child(4), .portal__form > *:nth-child(4) { animation-delay: 150ms; }
+  .shell__cartao > *:nth-child(n+5), .portal__form > *:nth-child(n+5) { animation-delay: 200ms; }
+  .aside__texto, .auth__aside > .aside__titulo, .passos-produto li, .aside__centrado > * { animation: subir .6s var(--ease) backwards; }
+  .passos-produto li:nth-child(2) { animation-delay: 90ms; } .passos-produto li:nth-child(3) { animation-delay: 180ms; }
+  .flutuantes { animation: aparecer .8s .15s var(--ease) both; }
+
+  /* Os cartões flutuam, cada um ao seu ritmo */
+  .flut { animation: flutuar 7s ease-in-out infinite alternate; }
+  .flut--2 { animation-duration: 8.5s; animation-delay: -3s; }
+  .flut--3 { animation-duration: 6s; animation-delay: -1.5s; }
+
+  /* O brilho de fundo mexe-se devagar */
+  .pf-glow::before { animation: brilho 18s ease-in-out infinite alternate; }
+
+  /* Avisos sobem a partir de baixo */
+  .toast { animation: toast .32s var(--ease); }
+
+  /* As barras de progresso enchem ao abrir */
+  .barra span { animation: encher .9s .15s var(--ease) backwards; }
+
+  /* À espera de dados: pulsa em vez de ficar parado */
+  .carregar-painel { animation: pulsar-texto 1.4s ease-in-out infinite; }
+}
+@keyframes subir { from { opacity: 0; transform: translateY(10px); } }
+@keyframes flutuar { from { transform: rotate(var(--r)) translateY(0); } to { transform: rotate(var(--r)) translateY(-10px); } }
+@keyframes brilho { from { transform: translate(0, 0) scale(1); } to { transform: translate(-4%, 3%) scale(1.08); } }
+@keyframes toast { from { opacity: 0; transform: translate(-50%, 14px); } }
+@keyframes pulsar-texto { 50% { opacity: .45; } }
+@keyframes encher { from { width: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .flut__cartao, .pf-btn, .pf-btn__arrow, .barra span { transition: none; }
+}
