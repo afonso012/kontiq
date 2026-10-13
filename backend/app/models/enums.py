@@ -37,7 +37,7 @@ NIVEIS_PROBLEMA = ("erro", "aviso")
 ESTADOS_PERIODO = ("aberto", "em_revisao", "fechado")
 CANAIS_PEDIDO = ("email", "sms", "whatsapp", "portal")
 ESTADOS_PEDIDO = ("rascunho", "enviado", "respondido")
-FORMATOS_EXPORTACAO = ("csv", "xlsx", "zip", "toconline", "primavera", "phc", "sage")
+FORMATOS_EXPORTACAO = ("csv", "xlsx", "zip", "toconline", "primavera", "phc", "sage", "lancamentos", "modelo")
 ESTADOS_SUBSCRICAO = ("teste", "ativa", "em_atraso", "cancelada")
 
 # Autenticação

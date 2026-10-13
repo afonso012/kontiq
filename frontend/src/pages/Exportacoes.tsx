@@ -3,12 +3,18 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { api, ErroApi, type PrevisaoExportacao } from '../api'
 import { AppLayout, useAviso } from '../components/app'
 import { Aviso } from '../components/ui'
+import { ConfigGaveta, MapearGaveta } from '../components/configExportacao'
+import type { ModeloExportacao } from '../api'
 import { mudarPeriodo, periodoAtual, quando } from '../util'
 
 const FORMATOS = [
   { id: 'xlsx', nome: 'Excel', desc: 'Faturas, linhas de IVA e resumo do IVA por empresa e taxa.' },
   { id: 'csv', nome: 'CSV', desc: 'Uma linha por fatura, separado por ";" e com vírgula decimal.' },
   { id: 'zip', nome: 'ZIP com documentos', desc: 'O Excel e os PDFs e fotografias, arrumados por empresa.' },
+]
+const PROGRAMA = [
+  { id: 'toconline', nome: 'TOConline', desc: 'Modelo de importação de lançamentos do TOConline. Um ficheiro por empresa.' },
+  { id: 'lancamentos', nome: 'Lançamentos (Excel)', desc: 'Débito no gasto e no IVA, crédito no fornecedor. Para qualquer programa.' },
 ]
 
 export default function Exportacoes() {
@@ -18,6 +24,9 @@ export default function Exportacoes() {
   const [erro, setErro] = useState<string | null>(null)
   const [sel, setSel] = useState<Set<string>>(new Set())
   const [formato, setFormato] = useState('xlsx')
+  const [modelo, setModelo] = useState<string | null>(null)
+  const [config, setConfig] = useState(false)
+  const [mapear, setMapear] = useState<{ m: ModeloExportacao; sugestao?: Record<string, string> } | null>(null)
   const [marcar, setMarcar] = useState(true)
   const [incluir, setIncluir] = useState(false)
   const [aExportar, setAExportar] = useState(false)
@@ -41,7 +50,7 @@ export default function Exportacoes() {
   async function exportar() {
     setAExportar(true)
     try {
-      const r = await api.exportar({ periodo, empresas: [...sel], formato, incluir_exportadas: incluir, marcar })
+      const r = await api.exportar({ periodo, empresas: [...sel], formato, incluir_exportadas: incluir, marcar, modelo: modelo ?? undefined })
       const a = document.createElement('a')
       a.href = `/api/exportacoes/${r.lote}/ficheiro`
       a.download = r.nome
@@ -113,11 +122,36 @@ export default function Exportacoes() {
           <div className="formatos" role="radiogroup" aria-label="Formato">
             {FORMATOS.map((f) => (
               <label key={f.id} className={`formato${formato === f.id ? ' on' : ''}`}>
-                <input type="radio" name="formato" value={f.id} checked={formato === f.id} onChange={() => setFormato(f.id)} className="sr-only" />
+                <input type="radio" name="formato" value={f.id} checked={formato === f.id} onChange={() => { setFormato(f.id); setModelo(null) }} className="sr-only" />
                 <span className="forte15">{f.nome}</span>
                 <span className="muted14">{f.desc}</span>
               </label>
             ))}
+          </div>
+          <div className="linha" style={{ marginTop: 6 }}>
+            <h3 className="forte15" style={{ margin: 0 }}>Para importar no programa</h3>
+            <button type="button" className="link-botao muted14 nowrap" onClick={() => setConfig(true)}>Configurar</button>
+          </div>
+          <div className="formatos" role="radiogroup" aria-label="Formato para o programa">
+            {PROGRAMA.map((f) => (
+              <label key={f.id} className={`formato${formato === f.id ? ' on' : ''}`}>
+                <input type="radio" name="formato" value={f.id} checked={formato === f.id} onChange={() => { setFormato(f.id); setModelo(null) }} className="sr-only" />
+                <span className="forte15">{f.nome}</span>
+                <span className="muted14">{f.desc}</span>
+              </label>
+            ))}
+            {d.modelos.map((m) => (
+              <label key={m.id} className={`formato${formato === 'modelo' && modelo === m.id ? ' on' : ''}`}>
+                <input type="radio" name="formato" value={m.id} checked={formato === 'modelo' && modelo === m.id}
+                  onChange={() => { setFormato('modelo'); setModelo(m.id) }} className="sr-only" />
+                <span className="forte15">{m.nome}</span>
+                <span className="muted14">{m.pronto ? `Modelo do ${m.programa_nome}, preenchido pela Kontiq. Um ficheiro por empresa.` : 'Falta indicar o que vai em cada coluna.'}</span>
+              </label>
+            ))}
+            <button type="button" className="formato formato--novo" onClick={() => setConfig(true)}>
+              <span className="forte15">+ Modelo do seu programa</span>
+              <span className="muted14">Sage, Primavera, PHC ou outro: carregue o Excel de importação de lançamentos.</span>
+            </button>
           </div>
           <label className="check">
             <input type="checkbox" checked={marcar} onChange={(e) => setMarcar(e.target.checked)} />
@@ -135,7 +169,6 @@ export default function Exportacoes() {
             {aExportar ? 'A preparar…' : nFaturas ? `Exportar ${nFaturas} ${nFaturas === 1 ? 'fatura' : 'faturas'}` : 'Nada para exportar'}
             <span className="pf-btn__arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 3v8m0 0-3-3m3 3 3-3M3 13h10" /></svg></span>
           </button>
-          <p className="muted14" style={{ margin: 0 }}>Formatos de importação do TOConline, Primavera, PHC e Sage: em breve.</p>
         </aside>
       </div>
 
@@ -165,6 +198,9 @@ export default function Exportacoes() {
           </div>
         )}
       </section>
+      <ConfigGaveta aberto={config} fechar={() => setConfig(false)} mudou={ler} mapear={(m, sugestao) => setMapear({ m, sugestao })} />
+      <MapearGaveta modelo={mapear?.m ?? null} sugestao={mapear?.sugestao} fechar={() => setMapear(null)}
+        gravado={(m) => { setMapear(null); ler(); setFormato('modelo'); setModelo(m.id); aviso.mostrar(`Modelo "${m.nome}" pronto a usar.`) }} />
       {aviso.elemento}
     </AppLayout>
   )

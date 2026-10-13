@@ -12,7 +12,7 @@ from sqlalchemy import (
     Boolean, CheckConstraint, DateTime, ForeignKey, Index, Integer, String, Text,
     UniqueConstraint, func, text,
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base, ComDatas, ComId, opcoes
@@ -38,6 +38,8 @@ class Gabinete(ComId, ComDatas, Base):
     estado: Mapped[str] = mapped_column(String(20), server_default="ativo")
     programa_contabilidade: Mapped[str | None] = mapped_column(String(20))
     dimensao: Mapped[str | None] = mapped_column(String(20))
+    # Contas, diário e tipos de documento para os lançamentos exportados (ver exportacoes/lancamentos.py).
+    config_exportacao: Mapped[dict] = mapped_column(JSONB, server_default=text("'{}'::jsonb"))
 
     membros: Mapped[list["MembroGabinete"]] = relationship(back_populates="gabinete")
 

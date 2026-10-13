@@ -5,8 +5,10 @@ Formatos desta fase (genéricos, abrem em qualquer programa):
 - csv:  uma linha por fatura, separador ";" e vírgula decimal (abre bem no Excel em PT);
 - zip:  o Excel + os documentos originais arrumados por empresa.
 
-Os formatos de importação próprios (TOConline, Primavera, PHC, Sage) ficam para
-quando forem confirmados com gabinetes reais.
+Formatos para importar no programa de contabilidade (ver lancamentos.py):
+- lancamentos: Excel genérico com os lançamentos (débito gasto e IVA, crédito fornecedor);
+- toconline:   modelo de importação de lançamentos do TOConline (um ficheiro por empresa);
+- modelo:      o modelo do próprio programa (Sage, Primavera, PHC…) carregado e mapeado pelo gabinete.
 """
 from __future__ import annotations
 
@@ -26,10 +28,14 @@ from ..auth.servico import ErroAuth
 from ..core import armazenamento
 from ..empresas.servico import MESES, euros
 from ..models import (
-    Categoria, ContaSNC, Documento, Empresa, Exportacao, Fatura, Fornecedor, RegistoAtividade, Utilizador,
+    Categoria, ContaSNC, Documento, Empresa, Exportacao, Fatura, Fornecedor, Gabinete, ModeloExportacao, RegistoAtividade,
+    Utilizador,
 )
+from . import lancamentos as L
 
-FORMATOS = {"xlsx": "Excel", "csv": "CSV", "zip": "ZIP com documentos"}
+FORMATOS = {"xlsx": "Excel", "csv": "CSV", "zip": "ZIP com documentos", "lancamentos": "Lançamentos (Excel)",
+            "toconline": "TOConline", "modelo": "Modelo do programa"}
+PROGRAMAS = {"toconline": "TOConline", "primavera": "Primavera", "phc": "PHC", "sage": "Sage", "outro": "Outro programa"}
 DEDUCAO = {"dedutivel": Decimal("1"), "dedutivel_50": Decimal("0.5"), "nao_dedutivel": Decimal("0"),
            "isento": Decimal("0"), "autoliquidacao": Decimal("0"), "por_definir": Decimal("0")}
 TRATAMENTOS = {"dedutivel": "Dedutível a 100%", "dedutivel_50": "Dedutível a 50%", "nao_dedutivel": "Não dedutível",
@@ -73,6 +79,9 @@ def previsao(s: Session, mes: date) -> dict:
         "empresas": [{"id": str(l.id), "nome": l.nome, "nif": l.nif, "prontas": l.prontas, "por_conferir": l.por_conferir,
                       "exportadas": l.exportadas, "total_txt": euros(l.total)} for l in linhas],
         "formatos": [{"id": k, "nome": v} for k, v in FORMATOS.items()],
+        "modelos": [{"id": str(m.id), "nome": m.nome, "programa": m.programa, "programa_nome": PROGRAMAS[m.programa],
+                     "pronto": bool(m.mapeamento)}
+                    for m in s.scalars(select(ModeloExportacao).order_by(ModeloExportacao.criado_em))],
     }
 
 
@@ -210,10 +219,50 @@ def _zip(s: Session, faturas: list[Fatura], d: dict, xlsx: bytes, nome_xlsx: str
     return buf.getvalue()
 
 
+def _por_empresa(ficheiros: list[tuple[str, bytes]], prefixo: str, rotulo: str) -> tuple[bytes, str, str]:
+    """Um ficheiro por empresa: se for só um, vai direto; se forem vários, vão num ZIP."""
+    xlsx = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    if len(ficheiros) == 1:
+        return ficheiros[0][1], ficheiros[0][0], xlsx
+    buf = io.BytesIO()
+    usados: set[str] = set()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        for nome, conteudo in ficheiros:
+            base, ext = nome.rsplit(".", 1)
+            n, i = nome, 2
+            while n in usados:
+                n, i = f"{base} ({i}).{ext}", i + 1
+            usados.add(n)
+            z.writestr(n, conteudo)
+    return buf.getvalue(), f"{prefixo} {rotulo}.zip", "application/zip"
+
+
+def _programa(s: Session, gabinete_id, faturas, d, formato: str, modelo_id, prefixo: str, rotulo: str) -> tuple[bytes, str, str]:
+    sem_conta = [f for f in faturas if not f.conta_codigo]
+    if sem_conta:
+        raise ErroAuth(422, "faturas_sem_conta", f"{len(sem_conta)} faturas não têm conta SNC. Reabra-as e escolha a conta.")
+    cfg = L.config(s.get(Gabinete, gabinete_id).config_exportacao)
+    movs = L.movimentos(faturas, d, cfg)
+    if formato == "lancamentos":
+        return L.xlsx_generico(movs), f"Lançamentos {prefixo} {rotulo}.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    if formato == "toconline":
+        fich = [(f"TOConline {_seguro(m[0].empresa_nome)} {rotulo}.xlsx", L.xlsx_toconline(m)) for m in movs.values()]
+        return _por_empresa(fich, "TOConline", rotulo)
+    modelo = s.get(ModeloExportacao, modelo_id) if modelo_id else None
+    if not modelo:
+        raise ErroAuth(422, "modelo_em_falta", "Escolha o modelo do programa.")
+    if not modelo.mapeamento:
+        raise ErroAuth(422, "modelo_por_mapear", "Indique primeiro que dados vão em cada coluna do modelo.")
+    original = armazenamento.caminho(modelo.chave_armazenamento).read_bytes()
+    fich = [(f"{_seguro(modelo.nome)} {_seguro(m[0].empresa_nome)} {rotulo}.xlsx",
+             L.xlsx_modelo(original, modelo.folha, modelo.linha_cabecalho, modelo.mapeamento, m)) for m in movs.values()]
+    return _por_empresa(fich, _seguro(modelo.nome), rotulo)
+
+
 def exportar(s: Session, gabinete_id, utilizador_id, mes: date, empresa_ids: list[uuid.UUID] | None, formato: str,
-             incluir_exportadas: bool, marcar: bool) -> dict:
+             incluir_exportadas: bool, marcar: bool, modelo_id: uuid.UUID | None = None) -> dict:
     if formato not in FORMATOS:
-        raise ErroAuth(422, "formato_invalido", "Escolha o formato: Excel, CSV ou ZIP.", "formato")
+        raise ErroAuth(422, "formato_invalido", "Escolha um formato de exportação.", "formato")
     mes = mes.replace(day=1)
     faturas = list(_consulta(s, mes, empresa_ids, incluir_exportadas))
     if not faturas:
@@ -225,7 +274,9 @@ def exportar(s: Session, gabinete_id, utilizador_id, mes: date, empresa_ids: lis
     prefixo = _seguro(next(iter(d["empresas"].values())).nome) if um else "Faturas"
     titulo = f"Exportado a {agora().astimezone():%d/%m/%Y %H:%M} · {len(faturas)} faturas · {MESES[mes.month - 1]} de {mes.year}"
     nome_xlsx = f"{prefixo} {rotulo}.xlsx"
-    if formato == "csv":
+    if formato in ("lancamentos", "toconline", "modelo"):
+        conteudo, nome, mime = _programa(s, gabinete_id, faturas, d, formato, modelo_id, prefixo, rotulo)
+    elif formato == "csv":
         conteudo, nome, mime = _csv(faturas, d), f"{prefixo} {rotulo}.csv", "text/csv"
     else:
         xlsx = _xlsx(faturas, d, titulo)

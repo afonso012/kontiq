@@ -108,7 +108,23 @@ export const api = {
     return dados as { resultados: { nome: string; ok: boolean; repetido: boolean; mensagem: string; fornecedor: string | null; total: string | null }[] }
   },
   previsaoExportacao: (periodo: string) => pedido<PrevisaoExportacao>('GET', `/api/exportacoes/previsao?periodo=${encodeURIComponent(periodo)}`),
-  exportar: (dados: { periodo: string; empresas: string[]; formato: string; incluir_exportadas: boolean; marcar: boolean }) =>
+  configExportacao: () => pedido<ConfigExportacao>('GET', '/api/exportacoes/configuracao'),
+  gravarConfigExportacao: (c: ContasExportacao) => pedido<ConfigExportacao>('PUT', '/api/exportacoes/configuracao', c),
+  carregarModelo: async (ficheiro: File, programa: string) => {
+    const fd = new FormData()
+    fd.append('ficheiro', ficheiro, ficheiro.name)
+    fd.append('programa', programa)
+    let r: Response
+    try { r = await fetch('/api/exportacoes/modelos', { method: 'POST', body: fd, credentials: 'same-origin' }) }
+    catch { throw new ErroApi(0, 'rede', 'Sem ligação ao servidor. Verifique a internet e tente outra vez.') }
+    const dados = await r.json().catch(() => null)
+    if (!r.ok) throw new ErroApi(r.status, dados?.codigo ?? 'erro', dados?.mensagem ?? 'Não foi possível carregar o modelo.')
+    return dados as ModeloExportacao & { sugestao: Record<string, string> }
+  },
+  mapearModelo: (id: string, dados: { nome?: string; programa?: string; mapeamento: Record<string, string> }) =>
+    pedido<ModeloExportacao>('PUT', `/api/exportacoes/modelos/${id}`, dados),
+  apagarModelo: (id: string) => pedido('DELETE', `/api/exportacoes/modelos/${id}`),
+  exportar: (dados: { periodo: string; empresas: string[]; formato: string; incluir_exportadas: boolean; marcar: boolean; modelo?: string }) =>
     pedido<{ lote: string; nome: string; faturas: number; empresas: number }>('POST', '/api/exportacoes', dados),
   desfazerExportacao: (lote: string) => pedido<{ faturas: number }>('POST', `/api/exportacoes/${lote}/desfazer`),
   perguntar: (id: string, texto: string) =>
@@ -240,6 +256,7 @@ export type PrevisaoExportacao = {
   periodo: string; periodo_txt: string
   empresas: { id: string; nome: string; nif: string; prontas: number; por_conferir: number; exportadas: number; total_txt: string }[]
   formatos: { id: string; nome: string }[]
+  modelos: { id: string; nome: string; programa: string; programa_nome: string; pronto: boolean }[]
   historico: { lote: string; em: string; formato: string; formato_nome: string; periodo: string; periodo_txt: string; faturas: number
     empresas: number; empresa: string | null; nome: string | null; quem: string | null; marcou: boolean; desfeita: string | null }[]
 }
@@ -286,4 +303,17 @@ export type Pedidos = {
   duvidas: { fatura_id: string; estado: 'pergunta' | 'resposta'; empresa: { id: string; nome: string }; fornecedor: string | null
     numero: string | null; total: string | null; ultima: { texto: string; lado: 'gabinete' | 'cliente'; em: string } | null }[]
   contagens: { em_falta: number; respostas: number; a_espera: number }
+}
+
+export type ContasExportacao = {
+  diario: string; conta_fornecedor: string; fornecedor_com_nif: boolean
+  contas_iva: Record<string, string>; tipos_documento: Record<string, string>; descricao: string
+}
+export type ModeloExportacao = {
+  id: string; nome: string; programa: string; programa_nome: string; folha: string | null; linha_cabecalho: number
+  cabecalhos: { col: number; nome: string }[]; mapeamento: Record<string, string>; criado_em: string | null
+}
+export type ConfigExportacao = {
+  config: ContasExportacao; padrao: ContasExportacao; tipos_taxa: Record<string, string>
+  campos: { id: string; nome: string }[]; programas: { id: string; nome: string }[]; modelos?: ModeloExportacao[]
 }

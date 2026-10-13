@@ -492,3 +492,12 @@ a.pf-btn { text-decoration: none; }
 .pf-tabs { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
 .pf-tabs::-webkit-scrollbar { display: none; }
 .pf-tab { white-space: nowrap; flex: none; }
+
+/* Formatos para o programa */
+.formato--novo { text-align: left; border-style: dashed; font: inherit; color: inherit; }
+.formato--novo:hover { border-color: var(--brand); }
+.tres { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.sep { height: 1px; background: var(--line); margin: 6px 0; }
+.tabela-mapa td { vertical-align: middle; }
+.tabela-mapa .sel { width: 100%; }
+@media (max-width: 640px) { .tres { grid-template-columns: 1fr 1fr; } }

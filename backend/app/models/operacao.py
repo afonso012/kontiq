@@ -89,3 +89,20 @@ class RegistoAtividade(Base):
     dados: Mapped[dict | None] = mapped_column(JSONB)
     ip: Mapped[str | None] = mapped_column(INET)
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+
+class ModeloExportacao(ComId, Base):
+    """Modelo de importação de um programa de contabilidade, carregado pelo gabinete, com o mapeamento das colunas."""
+
+    __tablename__ = "modelos_exportacao"
+
+    gabinete_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("gabinetes.id", ondelete="CASCADE"), index=True)
+    nome: Mapped[str] = mapped_column(String(80))
+    programa: Mapped[str] = mapped_column(String(20))
+    folha: Mapped[str | None] = mapped_column(String(80))
+    linha_cabecalho: Mapped[int] = mapped_column(Integer, server_default="1")
+    cabecalhos: Mapped[list] = mapped_column(JSONB)
+    mapeamento: Mapped[dict] = mapped_column(JSONB, server_default=text("'{}'::jsonb"))
+    chave_armazenamento: Mapped[str] = mapped_column(String(300))
+    criado_por: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("utilizadores.id", ondelete="SET NULL"))
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

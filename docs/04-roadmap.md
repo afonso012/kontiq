@@ -40,7 +40,10 @@
 
 ## Fase 4 — Integrações
 - [x] Exportações CSV, Excel (com resumo do IVA) e ZIP com documentos; marcar como exportadas e desfazer
-- [ ] Formatos de importação: TOConline, Primavera, PHC, Sage
+- [x] Lançamentos de compras (gasto, IVA dedutível, fornecedor) com contas configuráveis por gabinete
+- [x] Exportação TOConline (campos do modelo de importação — a confirmar com o modelo real)
+- [x] Modelo do programa: o gabinete carrega o Excel de importação (Sage, Primavera, PHC…) e mapeia as colunas
+- [ ] Confirmar os formatos com gabinetes reais; Sage for Accountants por TXT/XML; autoliquidação
 - [ ] APIs: InvoiceXpress, Moloni
 - [ ] Cruzamento com a lista do e-Fatura (formato a confirmar)
 
