@@ -5,6 +5,26 @@ export type Eu = {
   utilizador: { id: string; nome: string; email: string; email_confirmado: boolean }
   gabinete: { id: string; nome: string } | null
   papel?: string | null
+  subscricao?: ResumoSubscricao
+}
+
+export type ResumoSubscricao = {
+  plano: string; plano_nome: string; estado: 'teste' | 'expirada' | 'ativa' | 'em_atraso' | 'suspensa' | 'cancelada'
+  estado_nome: string; dias: number | null; pode_trabalhar: boolean; aviso: string | null
+}
+export type PlanoSub = {
+  id: string; nome: string; para: string; inclui: string[]; destaque: boolean; empresas: number; pessoas: number | null
+  mensal: string; anual: string; anual_por_mes: string; cabe: boolean
+}
+export type PagamentoSub = {
+  id: string; plano: string; plano_nome: string; ciclo: 'mensal' | 'anual'; valor: string; iva: string; total: string
+  estado: 'pendente' | 'pago' | 'falhado' | 'anulado'; fornecedor: string; criado_em: string; pago_em: string | null
+  periodo_fim: string | null; quem: string | null; modo?: string
+}
+export type Subscricao = ResumoSubscricao & {
+  ciclo: 'mensal' | 'anual'; cancelar_no_fim: boolean; fim_teste: string | null; proxima_renovacao: string | null; preco: string
+  uso: { empresas: number; pessoas: number; convites: number }; limites: { empresas: number; pessoas: number | null }
+  planos: PlanoSub[]; pagamentos: PagamentoSub[]; pode_gerir: boolean; modo_pagamento: string
 }
 
 export class ErroApi extends Error {
@@ -95,6 +115,12 @@ export const api = {
     pedido<{ duvida: 'pergunta' | 'resposta' | null; mensagens: MensagemDuvida[]; avisado: 'sms' | 'email' | null }>('POST', `/api/faturas/${id}/duvida`, { texto }),
   resolverDuvida: (id: string) => pedido<{ duvida: null; mensagens: MensagemDuvida[] }>('POST', `/api/faturas/${id}/duvida/resolver`),
   responderDuvida: (id: string, texto: string) => pedido<{ estado: 'resposta'; mensagens: MensagemDuvida[] }>('POST', `/api/portal/duvidas/${id}`, { texto }),
+  subscricao: () => pedido<Subscricao>('GET', '/api/subscricao'),
+  escolherPlano: (plano: string, ciclo: string) => pedido<{ pagamento: string; url: string }>('POST', '/api/subscricao/pagamentos', { plano, ciclo }),
+  pagamentoSub: (id: string) => pedido<PagamentoSub>('GET', `/api/subscricao/pagamentos/${id}`),
+  simularPagamento: (id: string, sucesso: boolean) => pedido<PagamentoSub>('POST', `/api/subscricao/pagamentos/${id}/simular`, { sucesso }),
+  cancelarSub: () => pedido<Subscricao>('POST', '/api/subscricao/cancelar'),
+  retomarSub: () => pedido<Subscricao>('POST', '/api/subscricao/retomar'),
   equipa: () => pedido<Equipa>('GET', '/api/equipa'),
   convidarColega: (email: string, papel: string) => pedido<{ id: string; email: string }>('POST', '/api/equipa/convites', { email, papel }),
   reenviarConvite: (id: string) => pedido('POST', `/api/equipa/convites/${id}/reenviar`),

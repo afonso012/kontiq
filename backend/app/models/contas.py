@@ -136,6 +136,28 @@ class Subscricao(ComId, ComDatas, Base):
     fornecedor_pagamento: Mapped[str | None] = mapped_column(String(30))
     referencia_externa: Mapped[str | None] = mapped_column(String(120))
     notas: Mapped[str | None] = mapped_column(Text)
+    ciclo: Mapped[str] = mapped_column(String(10), server_default="mensal")
+    cancelar_no_fim: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
+
+
+class PagamentoSubscricao(ComId, Base):
+    """Cada cobrança da subscrição (ou tentativa). O fornecedor pode ser "simulado"."""
+
+    __tablename__ = "pagamentos_subscricao"
+
+    gabinete_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("gabinetes.id", ondelete="CASCADE"), index=True)
+    plano: Mapped[str] = mapped_column(String(20))
+    ciclo: Mapped[str] = mapped_column(String(10))
+    valor_cents: Mapped[int] = mapped_column(Integer)
+    iva_cents: Mapped[int] = mapped_column(Integer)
+    estado: Mapped[str] = mapped_column(String(10), server_default="pendente")
+    fornecedor: Mapped[str] = mapped_column(String(30))
+    referencia: Mapped[str | None] = mapped_column(String(120))
+    periodo_inicio: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    periodo_fim: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    criado_por: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("utilizadores.id", ondelete="SET NULL"))
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    pago_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class Sessao(ComId, Base):

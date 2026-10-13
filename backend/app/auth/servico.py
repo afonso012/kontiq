@@ -215,6 +215,8 @@ def registar(s: Session, ctx: Contexto, *, nome: str, email: str, password: str,
     u = Utilizador(nome=nome.strip(), email=email_n, password_hash=seg.hash_password(password))
     s.add_all([g, u]); s.flush()
     s.add(MembroGabinete(gabinete_id=g.id, utilizador_id=u.id, papel="dono"))
+    from ..subscricoes.servico import criar_teste
+    criar_teste(s, g.id)
     _emitir_codigo(s, u, "confirmar_email", "email", email_n)
     token = criar_sessao(s, u, ctx, tipo="gabinete", gabinete_id=g.id)
     return u, g, token
@@ -348,4 +350,6 @@ def descrever(s: Session, sessao: Sessao) -> dict:
         m = s.scalar(select(MembroGabinete).where(MembroGabinete.utilizador_id == u.id,
                                                   MembroGabinete.gabinete_id == sessao.gabinete_id))
         out["papel"] = m.papel if m else None
+        from ..subscricoes.servico import resumo
+        out["subscricao"] = resumo(s, sessao.gabinete_id)
     return out

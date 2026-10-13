@@ -199,6 +199,8 @@ def criar_empresa(s: Session, gabinete_id, utilizador_id, dados: dict) -> Empres
     d = _limpar(dados, exigir_contacto=bool(dados.get("convidar")))
     if s.scalar(select(Empresa.id).where(Empresa.nif == d["nif"])):
         raise ErroAuth(409, "nif_existe", "Esta empresa já está no gabinete.", "nif")
+    from ..subscricoes.servico import exigir_vaga_empresa
+    exigir_vaga_empresa(s, gabinete_id)
     e = Empresa(gabinete_id=gabinete_id, responsavel_id=utilizador_id, **d)
     s.add(e)
     s.flush()

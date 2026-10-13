@@ -21,6 +21,7 @@ from ..auth.servico import ErroAuth
 from ..core import armazenamento
 from ..core.db import sessao_gabinete
 from ..faturas import duvidas
+from ..subscricoes.servico import exigir_ativa
 from ..faturas import servico as svc
 from .auth import SessaoAtual, exigir_gabinete
 from .empresas import _mes
@@ -56,8 +57,13 @@ async def carregar(empresa_id: uuid.UUID, ficheiros: list[UploadFile] = File(...
         dados = await f.read(svc.MAX_BYTES + 1)
         lidos.append((f.filename or "documento", dados))
     mes = _mes(periodo)
-    res = _no_gabinete(atual, lambda s: svc.carregar(s, atual.gabinete_id, atual.utilizador_id, empresa_id, lidos, mes))
+
+    def f(s):
+        exigir_ativa(s, atual.gabinete_id)
+        return svc.carregar(s, atual.gabinete_id, atual.utilizador_id, empresa_id, lidos, mes)
+    res = _no_gabinete(atual, f)
     return {"resultados": [asdict(r) for r in res]}
+
 
 
 @router.get("/api/faturas/{fatura_id}")

@@ -1,7 +1,7 @@
 """Todos os modelos, importados num só sítio para o Alembic os encontrar."""
 from .base import Base
 from .contas import (
-    AcessoPortal, CodigoVerificacao, Convite, Gabinete, MembroGabinete, Sessao, Subscricao,
+    AcessoPortal, CodigoVerificacao, Convite, Gabinete, MembroGabinete, PagamentoSubscricao, Sessao, Subscricao,
     TentativaLogin, Utilizador,
 )
 from .empresas import Categoria, ContaSNC, Empresa, Fornecedor, RegraFornecedor
@@ -20,7 +20,7 @@ TABELAS_COM_RLS = (
 TABELAS_PARTILHADAS = ("plano_contas", "categorias")
 
 __all__ = [
-    "Base", "Gabinete", "Utilizador", "MembroGabinete", "AcessoPortal", "Convite", "Subscricao",
+    "Base", "Gabinete", "Utilizador", "MembroGabinete", "AcessoPortal", "Convite", "Subscricao", "PagamentoSubscricao",
     "Sessao", "CodigoVerificacao", "TentativaLogin",
     "Empresa", "Fornecedor", "ContaSNC", "Categoria", "RegraFornecedor",
     "Documento", "Fatura", "LinhaIVA", "ProblemaFatura", "Comentario",

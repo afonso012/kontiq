@@ -86,6 +86,12 @@ def convidar(s: Session, gabinete_id, utilizador_id, email: str, papel: str) -> 
                   .where(MembroGabinete.gabinete_id == gabinete_id, func.lower(Utilizador.email) == email_n))
     if ja:
         raise ErroAuth(409, "ja_membro", "Esta pessoa já faz parte da equipa.", "email")
+    from ..subscricoes.servico import exigir_vaga_pessoa
+    pendente = s.scalar(select(Convite.id).where(Convite.gabinete_id == gabinete_id, Convite.empresa_id.is_(None),
+                                                 func.lower(Convite.email) == email_n, Convite.aceite_em.is_(None),
+                                                 Convite.expira_em > agora()))
+    if not pendente:  # um convite novo para o mesmo email só substitui o anterior
+        exigir_vaga_pessoa(s, gabinete_id)
     # Um convite novo substitui um pendente para o mesmo email.
     for antigo in s.scalars(select(Convite).where(Convite.gabinete_id == gabinete_id, Convite.empresa_id.is_(None),
                                                   func.lower(Convite.email) == email_n, Convite.aceite_em.is_(None))):

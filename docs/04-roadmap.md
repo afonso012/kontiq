@@ -47,4 +47,5 @@
 - [ ] Registar kontiq.pt (e marca no INPI)
 - [ ] Alojamento na UE, cópias de segurança, monitorização
 - [ ] RGPD: contrato de subcontratante, política de privacidade, retenção
-- [ ] Faturação das subscrições
+- [x] Subscrições: 3 planos (Arranque 29 €, Gabinete 79 €, Pro 149 €), teste de 30 dias, limites de empresas e pessoas, mensal/anual, cancelar, atraso e suspensão — pagamento simulado
+- [ ] Ligar um fornecedor de pagamentos real (cartão, MB WAY, Multibanco) e emitir fatura da subscrição

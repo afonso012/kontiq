@@ -13,6 +13,7 @@ import ConferirFatura from './pages/ConferirFatura'
 import Exportacoes from './pages/Exportacoes'
 import Equipa from './pages/Equipa'
 import Convite from './pages/Convite'
+import Subscricao, { PagamentoSimulado } from './pages/Subscricao'
 import Portal from './pages/Portal'
 import Recuperar from './pages/Recuperar'
 import Registo from './pages/Registo'
@@ -39,6 +40,8 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/faturas/:id" element={<Exige tipo="gabinete"><ConferirFatura /></Exige>} />
           <Route path="/exportacoes" element={<Exige tipo="gabinete"><Exportacoes /></Exige>} />
           <Route path="/equipa" element={<Exige tipo="gabinete"><Equipa /></Exige>} />
+          <Route path="/subscricao" element={<Exige tipo="gabinete"><Subscricao /></Exige>} />
+          <Route path="/subscricao/pagamento/:id" element={<Exige tipo="gabinete"><PagamentoSimulado /></Exige>} />
           <Route path="/convite/:token" element={<Convite />} />
           <Route path="/portal/inicio" element={<Exige tipo="portal"><PortalInicio /></Exige>} />
           <Route path="*" element={<Navigate to="/" replace />} />

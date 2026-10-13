@@ -45,6 +45,8 @@ class Settings(BaseSettings):
     smtp_utilizador: str = ""
     smtp_password: str = ""
     smtp_tls: bool = False
+    # Pagamentos da subscrição: "simulado" (página de teste, nunca em produção) ou "desligado".
+    pagamentos_modo: str = "simulado"
     email_remetente: str = "Kontiq <nao-responder@kontiq.pt>"
     # SMS: em desenvolvimento não se envia nada; a mensagem aparece no Mailpit e no terminal.
     sms_modo: str = "simulado"
