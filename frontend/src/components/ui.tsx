@@ -10,7 +10,7 @@ export function Seta() {
 }
 
 export function Marca() {
-  return <Link to="/" className="marca">Plataforma de Faturas</Link>
+  return <Link to="/" className="marca">Kontiq</Link>
 }
 
 /** Botão principal em pílula com a seta num círculo. */

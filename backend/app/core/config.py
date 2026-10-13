@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     pasta_documentos: str = str(Path(__file__).resolve().parents[3] / "dados" / "documentos")
 
     # Domínio dos endereços de entrada por empresa (x7k2p9@entrada.exemplo.pt).
-    dominio_email_entrada: str = "entrada.faturasemdia.local"
+    dominio_email_entrada: str = "entrada.kontiq.pt"
 
     secret_key: str = "mudar-em-producao"
 
@@ -45,7 +45,7 @@ class Settings(BaseSettings):
     smtp_utilizador: str = ""
     smtp_password: str = ""
     smtp_tls: bool = False
-    email_remetente: str = "Plataforma de Faturas <nao-responder@faturas.local>"
+    email_remetente: str = "Kontiq <nao-responder@kontiq.pt>"
     # SMS: em desenvolvimento não se envia nada; a mensagem aparece no Mailpit e no terminal.
     sms_modo: str = "simulado"
 

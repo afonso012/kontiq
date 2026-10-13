@@ -26,7 +26,7 @@ def _html(titulo: str, paragrafos: list[str], codigo: str | None) -> str:
         '<div style="background:#f5f6fa;padding:32px 16px;font-family:system-ui,sans-serif">'
         '<div style="max-width:480px;margin:0 auto;background:#fff;border:1px solid #e3e6ef;'
         'border-radius:20px;padding:32px">'
-        '<p style="margin:0 0 24px;font-weight:600;color:#0e1121">Plataforma de Faturas</p>'
+        '<p style="margin:0 0 24px;font-weight:600;color:#0e1121">Kontiq</p>'
         f'<h1 style="margin:0 0 12px;font-size:24px;font-weight:500;color:#0e1121">{escape(titulo)}</h1>'
         f"{corpo}{bloco}</div></div>"
     )

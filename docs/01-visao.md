@@ -1,4 +1,4 @@
-# Faturas em Dia — visão do produto
+# Kontiq — visão do produto
 
 **As faturas dos seus clientes, prontas para o seu programa de contabilidade.**
 

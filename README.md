@@ -1,4 +1,4 @@
-# Faturas em Dia
+# Kontiq
 
 As faturas dos clientes, prontas para o programa de contabilidade do gabinete.
 

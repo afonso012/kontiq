@@ -1,6 +1,6 @@
 #!/bin/zsh -l
 # ==========================================================================
-#  Faturas em Dia — instala o que falta e arranca a plataforma no Mac.
+#  Kontiq — instala o que falta e arranca a plataforma no Mac.
 #  Duplo clique no Finder. Pode correr-se várias vezes sem problema.
 #  Tudo o que acontece fica também em scripts/arrancar.log
 # ==========================================================================
@@ -14,7 +14,7 @@ exec > >(tee -a "$LOG") 2>&1
 passo() { print -P "\n%F{green}▶ $1%f"; }
 falha() { print -P "\n%F{red}✖ $1%f"; echo "ESTADO: FALHOU"; echo "Pode fechar esta janela."; exit 1; }
 
-echo "Faturas em Dia — arranque $(date '+%d/%m/%Y %H:%M')  ($(sw_vers -productVersion) $(uname -m))"
+echo "Kontiq — arranque $(date '+%d/%m/%Y %H:%M')  ($(sw_vers -productVersion) $(uname -m))"
 
 # ---------- 1. Python 3.11+ ----------
 passo "1/8 A procurar Python 3.11 ou mais recente"

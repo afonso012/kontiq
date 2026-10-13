@@ -36,7 +36,7 @@ export function AppLayout({ children, glow }: { children: ReactNode; glow?: bool
     <div className="shell">
       <nav className={`nav${menu ? ' is-aberto' : ''}`} aria-label="Navegação principal">
         <div className="nav__topo">
-          <span className="marca">Plataforma de Faturas</span>
+          <span className="marca">Kontiq</span>
           <button type="button" className="pf-btn pf-btn--sm nav__menu" aria-expanded={menu} onClick={() => setMenu(!menu)}>Menu</button>
         </div>
         <div className="nav__lista">

@@ -43,6 +43,8 @@
 - [ ] Cruzamento com a lista do e-Fatura (formato a confirmar)
 
 ## Fase 5 — Produção
+- [x] Nome do produto: Kontiq (domínio kontiq.pt)
+- [ ] Registar kontiq.pt (e marca no INPI)
 - [ ] Alojamento na UE, cópias de segurança, monitorização
 - [ ] RGPD: contrato de subcontratante, política de privacidade, retenção
 - [ ] Faturação das subscrições

@@ -34,7 +34,7 @@ from .models import Empresa, Fatura, Fornecedor, Gabinete, ProblemaFatura
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 
 app = FastAPI(
-    title="Plataforma de Faturas",
+    title="Kontiq",
     version="0.2.0",
     description="API da plataforma. Os endpoints de demonstração não têm autenticação e só existem fora de produção.",
 )
