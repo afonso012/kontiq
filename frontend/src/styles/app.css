@@ -539,3 +539,16 @@ a.pf-btn { text-decoration: none; }
 .interruptor input:checked + .interruptor__pista { background: var(--brand); }
 .interruptor input:checked + .interruptor__pista span { transform: translateX(18px); }
 .interruptor input:focus-visible + .interruptor__pista { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* Textos legais */
+.legal { max-width: 760px; margin: 0 auto; padding: 32px 20px 64px; display: grid; gap: 32px; }
+.legal__topo { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.legal__nav { display: flex; gap: 6px; flex-wrap: wrap; }
+.legal__nav a { padding: 6px 12px; border-radius: 999px; font-size: 14px; color: var(--ink-muted); text-decoration: none; }
+.legal__nav a[aria-current="page"] { background: var(--surface-sunk); color: var(--ink); }
+.legal__corpo { display: grid; gap: 14px; line-height: 1.6; }
+.legal__corpo h1 { font-size: clamp(32px, 4vw, 44px); font-weight: 500; letter-spacing: -0.03em; margin: 0; }
+.legal__corpo h2 { font-size: 20px; font-weight: 500; margin: 18px 0 0; }
+.legal__corpo p, .legal__corpo ul { margin: 0; color: var(--ink); }
+.legal__corpo ul { padding-left: 20px; display: grid; gap: 6px; }
+.legal__lead { font-size: 18px; color: var(--ink-muted) !important; }

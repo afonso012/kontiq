@@ -104,7 +104,7 @@ export default function Registo() {
             onChange={(e) => { setConta({ ...conta, password: e.target.value }); setErros({ ...erros, password: '' }) }} />
           <label className={`check${erros.aceito ? ' is-error' : ''}`}>
             <input type="checkbox" checked={conta.aceito} onChange={(e) => { setConta({ ...conta, aceito: e.target.checked }); setErros({ ...erros, aceito: '' }) }} />
-            <span>Aceito os <a href="#termos">Termos</a> e o <a href="#rgpd">Acordo de tratamento de dados (RGPD)</a></span>
+            <span>Aceito os <a href="/legal/termos" target="_blank" rel="noreferrer">Termos</a> e o <a href="/legal/rgpd" target="_blank" rel="noreferrer">Acordo de tratamento de dados (RGPD)</a></span>
           </label>
           {erros.aceito && <span className="erro13">{erros.aceito}</span>}
           <BotaoSeta aCarregar={aCarregar}>Continuar</BotaoSeta>

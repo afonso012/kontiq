@@ -53,7 +53,9 @@
 ## Fase 5 — Produção
 - [x] Nome do produto: Kontiq (domínio kontiq.pt)
 - [ ] Registar kontiq.pt (e marca no INPI)
-- [ ] Alojamento na UE, cópias de segurança, monitorização
-- [ ] RGPD: contrato de subcontratante, política de privacidade, retenção
+- [x] Preparado para produção: Dockerfile, docker-compose com HTTPS (Caddy), cópias diárias, registos JSON, Sentry opcional, verificação da configuração (docs/06-producao.md)
+- [ ] Alojamento na UE (comprar servidor e domínio)
+- [x] Política de privacidade, termos e acordo de tratamento de dados (rascunho em /legal/…)
+- [ ] Rever os textos legais com um jurista e preencher os dados do responsável
 - [x] Subscrições: 3 planos (Arranque 29 €, Gabinete 79 €, Pro 149 €), teste de 30 dias, limites de empresas e pessoas, mensal/anual, cancelar, atraso e suspensão — pagamento simulado
 - [ ] Ligar um fornecedor de pagamentos real (cartão, MB WAY, Multibanco) e emitir fatura da subscrição

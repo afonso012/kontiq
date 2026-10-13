@@ -10,7 +10,7 @@ export function AuthLayout({ topo, children, aside }: { topo?: ReactNode; childr
         <div className="auth__centro">{children}</div>
         <div className="auth__rodape">
           <span>Dados alojados na União Europeia</span>
-          <span className="auth__links"><a href="#privacidade">Privacidade</a><a href="#termos">Termos</a><a href="mailto:ajuda@kontiq.pt">Ajuda</a></span>
+          <span className="auth__links"><a href="/legal/privacidade">Privacidade</a><a href="/legal/termos">Termos</a><a href="mailto:ajuda@kontiq.pt">Ajuda</a></span>
         </div>
       </main>
       <aside className="auth__aside pf-glow">{aside}</aside>

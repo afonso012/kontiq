@@ -33,12 +33,20 @@ from .domain.qr_at import QRInvalido, ler_qr
 from .domain.validacao import validar
 from .models import Empresa, Fatura, Fornecedor, Gabinete, ProblemaFatura
 
-logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+from .core.producao import configurar_registos, verificar_configuracao
+
+configurar_registos()
+verificar_configuracao()
+_PRODUCAO = get_settings().producao
+log = logging.getLogger("faturas.api")
 
 app = FastAPI(
     title="Kontiq",
     version="0.2.0",
     description="API da plataforma. Os endpoints de demonstração não têm autenticação e só existem fora de produção.",
+    # Em produção a documentação interativa da API não fica pública.
+    docs_url=None if _PRODUCAO else "/docs", redoc_url=None if _PRODUCAO else "/redoc",
+    openapi_url=None if _PRODUCAO else "/openapi.json",
 )
 app.include_router(auth_router)
 app.include_router(portal_router)
@@ -61,7 +69,19 @@ def erro_auth(_: Request, e: ErroAuth) -> JSONResponse:
 
 @app.middleware("http")
 async def cabecalhos_seguranca(request: Request, call_next):
-    resposta = await call_next(request)
+    pedido_id = request.headers.get("x-request-id") or uuid.uuid4().hex[:12]
+    try:
+        resposta = await call_next(request)
+    except Exception:
+        # Erro inesperado: fica no registo (e no Sentry, se configurado) com o id do pedido;
+        # a pessoa vê uma mensagem simples com esse id para o poder indicar ao suporte.
+        log.exception("Erro em %s %s (pedido %s)", request.method, request.url.path, pedido_id)
+        resposta = JSONResponse({"codigo": "erro_interno", "campo": None,
+                                 "mensagem": f"Algo correu mal do nosso lado. Tente outra vez daqui a pouco (ref. {pedido_id})."},
+                                status_code=500)
+    resposta.headers["X-Request-Id"] = pedido_id
+    if _PRODUCAO:
+        resposta.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
     resposta.headers.setdefault("X-Content-Type-Options", "nosniff")
     resposta.headers.setdefault("X-Frame-Options", "DENY")
     resposta.headers.setdefault("Referrer-Policy", "same-origin")
@@ -190,7 +210,7 @@ def faturas_empresa(gabinete_id: uuid.UUID, empresa_id: uuid.UUID,
 @app.get("/{caminho:path}", include_in_schema=False)
 def aplicacao_web(caminho: str):
     """Serve o frontend construído; qualquer rota desconhecida devolve o index.html (SPA)."""
-    if caminho.startswith(("api/", "docs", "openapi.json", "redoc")):
+    if caminho.startswith(("api/", "docs", "openapi.json", "redoc", "demo/", "gabinetes/", "ferramentas/")):
         raise HTTPException(404)
     if not FRONTEND.exists():
         return RedirectResponse("/docs")

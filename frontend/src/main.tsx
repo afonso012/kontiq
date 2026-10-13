@@ -20,6 +20,7 @@ import Subscricao, { PagamentoSimulado } from './pages/Subscricao'
 import Portal from './pages/Portal'
 import Recuperar from './pages/Recuperar'
 import Registo from './pages/Registo'
+import Legal from './pages/Legal'
 import { destino, Exige, SessaoProvider, SoSemSessao, useSessao } from './sessao'
 
 function Raiz() {
@@ -49,6 +50,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/subscricao" element={<Exige tipo="gabinete"><Subscricao /></Exige>} />
           <Route path="/subscricao/pagamento/:id" element={<Exige tipo="gabinete"><PagamentoSimulado /></Exige>} />
           <Route path="/convite/:token" element={<Convite />} />
+          <Route path="/legal/:doc" element={<Legal />} />
           <Route path="/portal/inicio" element={<Exige tipo="portal"><PortalInicio /></Exige>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

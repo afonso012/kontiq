@@ -1,0 +1,24 @@
+# HTTPS automático para o domínio (certificado Let's Encrypt renovado sozinho).
+{$DOMINIO} {
+	encode zstd gzip
+	# Fotografias e PDFs das faturas: até 25 MB por pedido (10 ficheiros).
+	request_body {
+		max_size 25MB
+	}
+	reverse_proxy app:8000 {
+		header_up X-Request-Id {http.request.uuid}
+	}
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+	log {
+		output stdout
+		format json
+	}
+}
+
+# www.dominio → dominio
+www.{$DOMINIO} {
+	redir https://{$DOMINIO}{uri} permanent
+}
