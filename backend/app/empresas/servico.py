@@ -123,6 +123,12 @@ def painel(s: Session, gabinete_id: uuid.UUID, mes: date) -> dict:
         "detalhe": (f"em {p.n} faturas" if p.n > 1 else (f"de {p.numero}" if p.codigo == "duplicado" and p.numero
                     else "em 1 fatura")),
     } for p in problemas]
+    # Faturas que estão no e-Fatura e o cliente ainda não enviou.
+    from ..faturas.efatura import resumo_gabinete
+    nomes = {e["id"]: e["nome"] for e in empresas}
+    atencao += [{"nivel": "warn", "empresa_id": r["empresa_id"], "empresa": nomes.get(r["empresa_id"], ""),
+                 "codigo": "efatura_em_falta", "titulo": f"Falta 1 fatura" if r['em_falta'] == 1 else f"Faltam {r['em_falta']} faturas",
+                 "detalhe": "que estão no e-Fatura"} for r in resumo_gabinete(s, mes)]
     # Respostas dos clientes às dúvidas do gabinete (de qualquer mês): vêm primeiro.
     respostas = s.execute(
         select(Empresa.id, Empresa.nome, func.count().label("n"), func.min(cast(Fatura.id, String)).label("fatura_id"))

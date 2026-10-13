@@ -6,7 +6,7 @@ from .contas import (
 )
 from .empresas import Categoria, ContaSNC, Empresa, Fornecedor, RegraFornecedor
 from .faturas import Comentario, Documento, Fatura, LinhaIVA, ProblemaFatura
-from .operacao import Exportacao, ModeloExportacao, PedidoDocumentos, Periodo, RegistoAtividade
+from .operacao import Exportacao, LinhaEfatura, ModeloExportacao, PedidoDocumentos, Periodo, RegistoAtividade
 
 # Tabelas isoladas por gabinete com Row Level Security (ver migração 0003).
 # Ficam de fora as tabelas de autenticação (gabinetes, utilizadores, membros_gabinete,
@@ -14,7 +14,7 @@ from .operacao import Exportacao, ModeloExportacao, PedidoDocumentos, Periodo, R
 TABELAS_COM_RLS = (
     "empresas", "fornecedores", "regras_fornecedor", "documentos",
     "faturas", "linhas_iva", "problemas_fatura", "comentarios", "periodos",
-    "pedidos_documentos", "exportacoes", "registo_atividade", "modelos_exportacao",
+    "pedidos_documentos", "exportacoes", "registo_atividade", "modelos_exportacao", "efatura_linhas",
 )
 # Tabelas com linhas globais (gabinete_id NULL) visíveis a todos os gabinetes.
 TABELAS_PARTILHADAS = ("plano_contas", "categorias")
@@ -24,6 +24,6 @@ __all__ = [
     "Sessao", "CodigoVerificacao", "TentativaLogin",
     "Empresa", "Fornecedor", "ContaSNC", "Categoria", "RegraFornecedor",
     "Documento", "Fatura", "LinhaIVA", "ProblemaFatura", "Comentario",
-    "Periodo", "PedidoDocumentos", "Exportacao", "ModeloExportacao", "RegistoAtividade",
+    "Periodo", "PedidoDocumentos", "Exportacao", "ModeloExportacao", "LinhaEfatura", "RegistoAtividade",
     "TABELAS_COM_RLS", "TABELAS_PARTILHADAS",
 ]

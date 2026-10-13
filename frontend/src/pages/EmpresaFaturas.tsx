@@ -4,6 +4,7 @@ import { api, ErroApi, type EmpresaPainel, type EstadoFatura, type FaturasEmpres
 import { AppLayout, Gaveta, useAviso } from '../components/app'
 import { Aviso } from '../components/ui'
 import { mudarPeriodo, periodoAtual } from '../util'
+import { EfaturaGaveta } from '../components/efatura'
 import { EmpresaGaveta } from './EmpresaGaveta'
 
 export const ESTADOS: Record<EstadoFatura, [string, string]> = {
@@ -34,6 +35,7 @@ export default function EmpresaFaturas() {
   const [sel, setSel] = useState<Set<string>>(new Set())
   const [carregar, setCarregar] = useState(false)
   const [editar, setEditar] = useState<EmpresaPainel | null>(null)
+  const [efatura, setEfatura] = useState(false)
   const aviso = useAviso()
   const local = useLocation()
   useEffect(() => {
@@ -91,6 +93,8 @@ export default function EmpresaFaturas() {
             <button type="button" className="pf-btn pf-btn--sm periodo__seta" aria-label="Mês seguinte" disabled={periodo >= periodoAtual()} onClick={() => mudaPeriodo(mudarPeriodo(periodo, 1))}>›</button>
           </div>
           <button type="button" className="pf-btn" onClick={abrirEditar}>Editar empresa</button>
+          <button type="button" className="pf-btn" onClick={() => setEfatura(true)}>e-Fatura</button>
+          <Link to={`/empresas/${id}/iva?periodo=${periodo}`} className="pf-btn">IVA</Link>
           <button type="button" className="pf-btn" onClick={() => setCarregar(true)}>Carregar faturas</button>
           {porConferir.length > 0 && (
             <button type="button" className="pf-btn pf-btn--primary pf-btn--arrow" onClick={() => nav(`/faturas/${porConferir[0].id}`)}>
@@ -107,6 +111,18 @@ export default function EmpresaFaturas() {
         <div className="pf-stat"><div className="pf-stat__label">Por conferir</div><div className={`pf-stat__value${t.por_conferir ? ' is-warn' : ''}`}>{t.por_conferir}</div><div className="pf-stat__sub">{t.por_conferir ? `${t.qr} pelo QR · ${t.manual} manuais` : 'tudo em dia'}</div></div>
         <div className="pf-stat"><div className="pf-stat__label">Problemas</div><div className={`pf-stat__value${t.problemas ? ' is-bad' : ''}`}>{t.problemas}</div><div className="pf-stat__sub">{t.problemas ? 'faturas com erros' : 'nenhum'}</div></div>
       </section>
+
+      {d.efatura.importado_em && (
+        <div className={`pf-alert pf-alert--${d.efatura.em_falta ? 'warn' : 'info'} faixa-efatura`}>
+          <span className="pf-alert__tag">e-Fatura</span>
+          <div style={{ flex: 1 }}>
+            {d.efatura.ok} de {d.efatura.total} faturas das Finanças já recebidas
+            {d.efatura.em_falta > 0 && <> · <b>{d.efatura.em_falta} em falta</b></>}
+            {d.efatura.so_kontiq > 0 && <> · {d.efatura.so_kontiq} não {d.efatura.so_kontiq === 1 ? 'comunicada' : 'comunicadas'} pelo fornecedor</>}
+          </div>
+          <button type="button" className="pf-btn pf-btn--sm" onClick={() => setEfatura(true)}>Ver</button>
+        </div>
+      )}
 
       {d.faturas.length === 0 ? (
         <div className="vazio-faturas pf-glow">
@@ -151,7 +167,8 @@ export default function EmpresaFaturas() {
                     <td className="is-num">{f.iva}</td>
                     <td className="is-num">{f.total}</td>
                     <td><span className={ESTADOS[f.estado][1]}>{f.exportada ? 'Exportada' : ESTADOS[f.estado][0]}</span>{f.nota_curta && f.estado !== 'ok' && <span className="nota-linha">{f.nota_curta}</span>}
-                      {f.duvida && <span className={`nota-linha nota-duvida${f.duvida === 'resposta' ? ' is-nova' : ''}`}>{f.duvida === 'resposta' ? '● O cliente respondeu' : 'À espera do cliente'}</span>}</td>
+                      {f.duvida && <span className={`nota-linha nota-duvida${f.duvida === 'resposta' ? ' is-nova' : ''}`}>{f.duvida === 'resposta' ? '● O cliente respondeu' : 'À espera do cliente'}</span>}
+                      {f.fora_efatura && <span className="nota-linha" style={{ color: 'var(--danger)' }}>Não está no e-Fatura</span>}</td>
                   </tr>
                 ))}
                 {lista.length === 0 && <tr><td colSpan={8} className="centro muted" style={{ padding: 32 }}>Nenhuma fatura com este filtro.</td></tr>}
@@ -164,6 +181,8 @@ export default function EmpresaFaturas() {
       <CarregarModal aberto={carregar} empresaId={id} periodo={periodo} empresa={d.empresa.nome}
         fechar={() => { setCarregar(false); ler() }}
         conferir={(fid) => nav(`/faturas/${fid}`)} />
+      <EfaturaGaveta aberto={efatura} fechar={() => setEfatura(false)} empresaId={id} empresa={d.empresa.nome} periodo={periodo}
+        mudou={ler} avisar={aviso.mostrar} />
       <EmpresaGaveta aberto={!!editar} empresa={editar} fechar={() => setEditar(null)} gravado={(m) => { setEditar(null); aviso.mostrar(m); ler() }} />
       {aviso.elemento}
     </AppLayout>

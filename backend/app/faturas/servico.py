@@ -345,8 +345,11 @@ def lista_empresa(s: Session, empresa_id, mes: date) -> dict:
     acesso = s.execute(select(Utilizador.nome).join(AcessoPortal, AcessoPortal.utilizador_id == Utilizador.id)
                        .where(AcessoPortal.empresa_id == e.id).limit(1)).scalar()
     linhas, validas = [], [f for f in faturas if f.estado != "rejeitada"]
+    from .efatura import cruzar
+    ef = cruzar(s, e.id, mes)
+    fora = set(ef["so_kontiq_ids"])
     for f in faturas:
-        linhas.append(_linha(f, fornecedores, contas))
+        linhas.append({**_linha(f, fornecedores, contas), "fora_efatura": str(f.id) in fora})
     n_ok = sum(1 for f in validas if f.estado in ("conferida", "exportada"))
     s_conf = get_settings()
     return {
@@ -363,6 +366,8 @@ def lista_empresa(s: Session, empresa_id, mes: date) -> dict:
             "por_preencher": sum(1 for f in validas if _por_preencher(f) and f.estado == "por_conferir"),
         },
         "faturas": linhas,
+        "efatura": {"importado_em": ef["importado_em"], "total": ef["total_efatura"], "em_falta": len(ef["em_falta"]),
+                    "so_kontiq": len(ef["so_kontiq"]), "ok": ef["ok"]},
     }
 
 

@@ -3,10 +3,11 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime
+from decimal import Decimal
 
 from sqlalchemy import (
     Boolean,
-    BigInteger, CheckConstraint, Date, DateTime, ForeignKey, Identity, Index, Integer, String, Text,
+    BigInteger, CheckConstraint, Date, DateTime, ForeignKey, Identity, Index, Integer, Numeric, String, Text,
     UniqueConstraint, func, text,
 )
 from sqlalchemy.dialects.postgresql import INET, JSONB, UUID
@@ -106,3 +107,25 @@ class ModeloExportacao(ComId, Base):
     chave_armazenamento: Mapped[str] = mapped_column(String(300))
     criado_por: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("utilizadores.id", ondelete="SET NULL"))
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class LinhaEfatura(ComId, Base):
+    """Uma fatura de aquisição como aparece no e-Fatura (importada do CSV do Portal das Finanças)."""
+
+    __tablename__ = "efatura_linhas"
+
+    gabinete_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("gabinetes.id", ondelete="CASCADE"))
+    empresa_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("empresas.id", ondelete="CASCADE"))
+    periodo: Mapped[date] = mapped_column(Date)
+    nif_emitente: Mapped[str] = mapped_column(String(20))
+    nome_emitente: Mapped[str | None] = mapped_column(String(200))
+    numero: Mapped[str] = mapped_column(String(120))
+    atcud: Mapped[str | None] = mapped_column(String(120))
+    tipo: Mapped[str | None] = mapped_column(String(40))
+    data_emissao: Mapped[date] = mapped_column(Date)
+    total: Mapped[Decimal | None] = mapped_column(Numeric(14, 2))
+    iva: Mapped[Decimal | None] = mapped_column(Numeric(14, 2))
+    base: Mapped[Decimal | None] = mapped_column(Numeric(14, 2))
+    situacao: Mapped[str | None] = mapped_column(String(60))
+    importado_por: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("utilizadores.id", ondelete="SET NULL"))
+    importado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

@@ -45,7 +45,8 @@
 - [x] Modelo do programa: o gabinete carrega o Excel de importação (Sage, Primavera, PHC…) e mapeia as colunas
 - [ ] Confirmar os formatos com gabinetes reais; Sage for Accountants por TXT/XML; autoliquidação
 - [ ] APIs: InvoiceXpress, Moloni
-- [ ] Cruzamento com a lista do e-Fatura (formato a confirmar)
+- [x] Cruzamento com o e-Fatura: carregar o CSV "Obter dados para Excel", faturas em falta (pedir ao cliente) e não comunicadas
+- [x] Resumo do IVA por mês/trimestre com os campos sugeridos do quadro 06 da declaração periódica (Excel)
 
 ## Fase 5 — Produção
 - [x] Nome do produto: Kontiq (domínio kontiq.pt)

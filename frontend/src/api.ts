@@ -145,6 +145,20 @@ export const api = {
   },
   pedidos: (periodo: string) => pedido<Pedidos>('GET', `/api/pedidos?periodo=${encodeURIComponent(periodo)}`),
   pedirTodas: (periodo: string) => pedido<{ enviados: { nome: string; canal: string }[]; ignoradas: { nome: string; motivo: string }[] }>('POST', '/api/pedidos/todas', { periodo }),
+  efatura: (eid: string, periodo: string) => pedido<CruzamentoEfatura>('GET', `/api/empresas/${eid}/efatura?periodo=${encodeURIComponent(periodo)}`),
+  importarEfatura: async (eid: string, ficheiro: File) => {
+    const fd = new FormData()
+    fd.append('ficheiro', ficheiro, ficheiro.name)
+    let r: Response
+    try { r = await fetch(`/api/empresas/${eid}/efatura`, { method: 'POST', body: fd, credentials: 'same-origin' }) }
+    catch { throw new ErroApi(0, 'rede', 'Sem ligação ao servidor. Verifique a internet e tente outra vez.') }
+    const dados = await r.json().catch(() => null)
+    if (!r.ok) throw new ErroApi(r.status, dados?.codigo ?? 'erro', dados?.mensagem ?? 'Não foi possível ler o ficheiro.')
+    return dados as { linhas: number; meses: { periodo: string; periodo_txt: string; em_falta: number; so_kontiq: number; ok: number }[] }
+  },
+  pedirEfatura: (eid: string, periodo: string) => pedido<{ canal: string; faturas: number }>('POST', `/api/empresas/${eid}/efatura/pedir`, { periodo }),
+  resumoIva: (eid: string, periodo: string, tipo?: string) =>
+    pedido<ResumoIva>('GET', `/api/empresas/${eid}/iva?periodo=${encodeURIComponent(periodo)}${tipo ? `&tipo=${tipo}` : ''}`),
   equipa: () => pedido<Equipa>('GET', '/api/equipa'),
   convidarColega: (email: string, papel: string) => pedido<{ id: string; email: string }>('POST', '/api/equipa/convites', { email, papel }),
   reenviarConvite: (id: string) => pedido('POST', `/api/equipa/convites/${id}/reenviar`),
@@ -208,7 +222,7 @@ export type EstadoFatura = 'ok' | 'warn' | 'bad' | 'rejeitada'
 export type LinhaFatura = {
   id: string; data: string | null; fornecedor: string | null; nif: string | null; numero: string | null; tipo: string
   metodo: 'qr' | 'ia' | 'manual'; confianca: number | null; conta: string | null; conta_nome: string | null
-  iva: string; total: string; total_n: number; estado: EstadoFatura; nota: string | null; nota_curta: string | null; exportada?: boolean; duvida?: 'pergunta' | 'resposta' | null
+  iva: string; total: string; total_n: number; estado: EstadoFatura; nota: string | null; nota_curta: string | null; exportada?: boolean; duvida?: 'pergunta' | 'resposta' | null; fora_efatura?: boolean
 }
 
 export type FaturasEmpresa = {
@@ -216,6 +230,7 @@ export type FaturasEmpresa = {
   periodo: string; periodo_txt: string
   totais: { faturas: number; total_txt: string; iva_txt: string; conferidas: number; por_conferir: number; qr: number; manual: number; problemas: number }
   faturas: LinhaFatura[]
+  efatura: { importado_em: string | null; total: number; em_falta: number; so_kontiq: number; ok: number }
 }
 
 export type Opcoes = {
@@ -316,4 +331,21 @@ export type ModeloExportacao = {
 export type ConfigExportacao = {
   config: ContasExportacao; padrao: ContasExportacao; tipos_taxa: Record<string, string>
   campos: { id: string; nome: string }[]; programas: { id: string; nome: string }[]; modelos?: ModeloExportacao[]
+}
+
+export type CruzamentoEfatura = {
+  periodo: string; periodo_txt: string; importado_em: string | null; total_efatura: number; ok: number
+  em_falta: { id: string; nif: string; fornecedor: string | null; numero: string; tipo: string | null; data: string; total: string | null }[]
+  so_kontiq: { id: string; nif: string; fornecedor: string | null; numero: string | null; data: string | null; total: string }[]
+}
+
+type ValoresIva = { base: string; iva: string; dedutivel: string; base_n: number; iva_n: number; dedutivel_n: number }
+export type ResumoIva = {
+  empresa: { id: string; nome: string; nif: string; periodicidade_iva: string }
+  tipo: 'mes' | 'trimestre'; periodo: string; periodo_txt: string; faturas: number; por_conferir: number; notas_credito: number
+  totais: ValoresIva & { nao_dedutivel: string }
+  campos: { campo: string; nome: string; valor: string; valor_n: number }[]
+  taxas: (ValoresIva & { espaco: string; taxa: string; pct: number | null })[]
+  tratamentos: (ValoresIva & { id: string; nome: string })[]
+  contas: (ValoresIva & { conta: string; nome: string })[]
 }

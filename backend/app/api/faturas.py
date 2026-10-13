@@ -21,6 +21,8 @@ from ..auth.servico import ErroAuth
 from ..core import armazenamento
 from ..core.db import sessao_gabinete
 from ..faturas import duvidas
+from ..faturas import efatura
+from ..faturas import iva as iva_svc
 from ..subscricoes.servico import exigir_ativa
 from ..faturas import servico as svc
 from .auth import SessaoAtual, exigir_gabinete
@@ -259,3 +261,46 @@ def perguntar(fatura_id: uuid.UUID, corpo: Mensagem, atual: SessaoAtual = Depend
 @router.post("/api/faturas/{fatura_id}/duvida/resolver")
 def resolver_duvida(fatura_id: uuid.UUID, atual: SessaoAtual = Depends(exigir_gabinete)) -> dict:
     return _no_gabinete(atual, lambda s: duvidas.resolver(s, atual.gabinete_id, atual.utilizador_id, fatura_id))
+
+
+# ---------------------------------------------------------------- e-Fatura
+
+@router.post("/api/empresas/{empresa_id}/efatura")
+async def importar_efatura(empresa_id: uuid.UUID, ficheiro: UploadFile = File(...), atual: SessaoAtual = Depends(exigir_gabinete)) -> dict:
+    """Recebe o CSV do e-Fatura ("Obter dados para Excel") e compara com as faturas recebidas."""
+    dados = await ficheiro.read(efatura.MAX_BYTES + 1)
+    return _no_gabinete(atual, lambda s: efatura.importar(s, atual.gabinete_id, atual.utilizador_id, empresa_id, dados))
+
+
+@router.get("/api/empresas/{empresa_id}/efatura")
+def ver_efatura(empresa_id: uuid.UUID, periodo: str | None = Query(None), atual: SessaoAtual = Depends(exigir_gabinete)) -> dict:
+    return _no_gabinete(atual, lambda s: efatura.cruzar(s, empresa_id, _mes(periodo)))
+
+
+class PeriodoEfatura(BaseModel):
+    periodo: str | None = None
+
+
+@router.post("/api/empresas/{empresa_id}/efatura/pedir")
+def pedir_efatura(empresa_id: uuid.UUID, corpo: PeriodoEfatura, atual: SessaoAtual = Depends(exigir_gabinete)) -> dict:
+    """Pede ao cliente as faturas que estão no e-Fatura e ainda não foram recebidas."""
+    return _no_gabinete(atual, lambda s: efatura.pedir_em_falta(s, atual.gabinete_id, atual.utilizador_id, empresa_id, _mes(corpo.periodo)))
+
+
+# ---------------------------------------------------------------- resumo do IVA
+
+@router.get("/api/empresas/{empresa_id}/iva")
+def resumo_iva(empresa_id: uuid.UUID, periodo: str | None = Query(None), tipo: str | None = Query(None),
+               atual: SessaoAtual = Depends(exigir_gabinete)) -> dict:
+    """IVA das compras do mês ou trimestre, com os campos sugeridos da declaração periódica."""
+    return _no_gabinete(atual, lambda s: iva_svc.resumo(s, empresa_id, _mes(periodo), tipo))
+
+
+@router.get("/api/empresas/{empresa_id}/iva.xlsx")
+def resumo_iva_xlsx(empresa_id: uuid.UUID, periodo: str | None = Query(None), tipo: str | None = Query(None),
+                    atual: SessaoAtual = Depends(exigir_gabinete)):
+    r = _no_gabinete(atual, lambda s: iva_svc.resumo(s, empresa_id, _mes(periodo), tipo))
+    nome = f"IVA {r['empresa']['nome']} {r['periodo_txt']}.xlsx".replace("/", "-")
+    from urllib.parse import quote
+    return Response(iva_svc.xlsx(r), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(nome)}", "Cache-Control": "private, no-store"})

@@ -501,3 +501,23 @@ a.pf-btn { text-decoration: none; }
 .tabela-mapa td { vertical-align: middle; }
 .tabela-mapa .sel { width: 100%; }
 @media (max-width: 640px) { .tres { grid-template-columns: 1fr 1fr; } }
+
+/* e-Fatura */
+.passos-efatura { margin: 0; padding-left: 22px; display: grid; gap: 10px; font-size: 15px; line-height: 1.5; }
+.efatura-resumo { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.efatura-resumo > div { display: grid; gap: 2px; padding: 14px; border-radius: 16px; background: var(--surface-sunk); }
+.efatura-resumo__n { font: 500 26px/30px var(--font-mono); }
+.efatura-resumo__n.ok { color: var(--ok, #1a7f4b); } .efatura-resumo__n.warn { color: var(--warn); } .efatura-resumo__n.bad { color: var(--danger); }
+.faixa-efatura { align-items: center; }
+
+/* Resumo do IVA */
+.iva-topo { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.iva-dp { display: grid; gap: 14px; padding: 24px; border: 1px solid var(--line); border-radius: var(--radius-xl, 24px); }
+.iva-campos { list-style: none; margin: 0; padding: 0; display: grid; }
+.iva-campos li { display: grid; grid-template-columns: 44px 1fr auto; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); font-size: 15px; }
+.iva-campos li.is-zero { color: var(--ink-muted); }
+.iva-campos__n { display: inline-grid; place-items: center; width: 36px; height: 28px; border-radius: 8px; background: var(--surface-sunk); font-size: 13px; }
+.iva-campos__total { font-weight: 500; font-size: 17px !important; }
+.iva-stats { grid-template-columns: 1fr; }
+.iva-tabelas { display: grid; gap: 24px; }
+@media (max-width: 1100px) { .iva-topo { grid-template-columns: 1fr; } }
