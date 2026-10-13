@@ -18,6 +18,7 @@ from sqlalchemy import case, func, select, text
 from .api.auth import portal as portal_router
 from .api.auth import router as auth_router
 from .api.empresas import router as empresas_router
+from .api.equipa import router as equipa_router
 from .api.exportacoes import router as exportacoes_router
 from .api.faturas import router as faturas_router
 from .api.portal import router as portal_cliente_router
@@ -44,6 +45,7 @@ app.include_router(empresas_router)
 app.include_router(faturas_router)
 app.include_router(exportacoes_router)
 app.include_router(portal_cliente_router)
+app.include_router(equipa_router)
 
 FRONTEND = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 

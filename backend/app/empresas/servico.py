@@ -123,6 +123,15 @@ def painel(s: Session, gabinete_id: uuid.UUID, mes: date) -> dict:
         "detalhe": (f"em {p.n} faturas" if p.n > 1 else (f"de {p.numero}" if p.codigo == "duplicado" and p.numero
                     else "em 1 fatura")),
     } for p in problemas]
+    # Respostas dos clientes às dúvidas do gabinete (de qualquer mês): vêm primeiro.
+    respostas = s.execute(
+        select(Empresa.id, Empresa.nome, func.count().label("n"), func.min(cast(Fatura.id, String)).label("fatura_id"))
+        .join(Fatura, Fatura.empresa_id == Empresa.id)
+        .where(Fatura.duvida == "resposta", Fatura.eliminada_em.is_(None))
+        .group_by(Empresa.id, Empresa.nome).order_by(Empresa.nome)).all()
+    atencao = [{"nivel": "warn", "empresa_id": str(r.id), "empresa": r.nome, "codigo": "cliente_respondeu",
+                "fatura_id": r.fatura_id, "titulo": "O cliente respondeu",
+                "detalhe": f"a {r.n} dúvidas" if r.n > 1 else "à sua dúvida"} for r in respostas] + atencao
     hoje = date.today()
     # Clientes sem faturas: só a partir do dia 5 do mês seguinte, ou se o mês já passou.
     if mes < hoje.replace(day=1) or hoje.day >= 5:

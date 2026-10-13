@@ -9,6 +9,7 @@ const I = {
   faturas: <><path d="M6 3h9l4 4v14H6z" /><path d="M14 3v5h5M9 13h7M9 17h5" /></>,
   pedidos: <path d="M4 4h16v12H8l-4 4z" />,
   exportar: <><path d="M12 3v12m0 0-4-4m4 4 4-4" /><path d="M4 17v3h16v-3" /></>,
+  equipa: <><circle cx="9" cy="8" r="3.2" /><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5" /><path d="M16 4.6a3.2 3.2 0 0 1 0 6.3M18 14.8c1.9.6 3 2.6 3 5.2" /></>,
   sair: <><path d="M15 4h4v16h-4" /><path d="M10 8l-4 4 4 4M6 12h10" /></>,
 }
 
@@ -43,6 +44,7 @@ export function AppLayout({ children, glow }: { children: ReactNode; glow?: bool
           {emBreve('faturas', 'Faturas')}
           {emBreve('pedidos', 'Pedidos')}
           <NavLink to="/exportacoes" className={({ isActive }) => `nav__item${isActive ? ' on' : ''}`}><Icone nome="exportar" />Exportações</NavLink>
+          <NavLink to="/equipa" className={({ isActive }) => `nav__item${isActive ? ' on' : ''}`}><Icone nome="equipa" />Equipa</NavLink>
           <div className="nav__espaco" />
           <div className="nav__conta">
             <span className="avatar" aria-hidden="true">{iniciais(eu?.utilizador.nome ?? '')}</span>

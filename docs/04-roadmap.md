@@ -11,7 +11,8 @@
 - [x] Autenticação: registo do gabinete, confirmar email, entrar/sair, repor palavra-passe
 - [x] Portal do cliente: entrar por código (SMS simulado / email)
 - [x] Aplicação web (React) com os ecrãs de entrada e registo
-- [ ] Convites de colaboradores e de clientes do portal
+- [x] Equipa do gabinete: convidar por email (administrador ou colaborador), mudar papel, remover
+- [x] Convites de clientes do portal (SMS ou email)
 - [ ] Entrar com Google e Microsoft (precisa de domínio e app registada)
 - [ ] Envio real de email (fornecedor SMTP) e SMS (fornecedor a escolher)
 - [x] CRUD de empresas-cliente
@@ -26,7 +27,7 @@
 - [x] Painel do gabinete: números do mês, o que precisa de atenção, empresas por estado
 - [x] Faturas da empresa, carregar PDFs/fotos e conferir (documento ao lado, fila, duplicados, regras)
 - [x] Portal do cliente: enviar faturas (foto ou ficheiro), ver o estado do que enviou e os pedidos do gabinete
-- [ ] Portal do cliente: responder a comentários
+- [x] Dúvidas sobre uma fatura: o gabinete pergunta na conferência, o cliente é avisado e responde no portal, a resposta aparece no painel
 - [ ] Email de entrada por empresa
 
 ## Fase 3 — Leitura com IA

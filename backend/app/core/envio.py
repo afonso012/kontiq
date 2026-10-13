@@ -54,8 +54,9 @@ def enviar_email(destino: str, assunto: str, titulo: str, paragrafos: list[str],
             log.error("Falha a enviar email para %s: %s", destino, e)
             raise
         # Desenvolvimento sem Mailpit: mostrar no terminal para se poder continuar.
-        log.warning("Mailpit indisponível (%s). Email para %s — %s%s", e, destino, assunto,
-                    f" — CÓDIGO {codigo}" if codigo else "")
+        links = " ".join(p for p in paragrafos if "://" in p)
+        log.warning("Mailpit indisponível (%s). Email para %s — %s%s%s", e, destino, assunto,
+                    f" — CÓDIGO {codigo}" if codigo else "", f" — {links}" if links else "")
         return False
 
 

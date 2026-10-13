@@ -334,7 +334,7 @@ def lista_empresa(s: Session, empresa_id, mes: date) -> dict:
             "conta": f.conta_codigo, "conta_nome": contas.get(f.conta_codigo) if f.conta_codigo else None,
             "iva": euros(f.iva_total), "total": euros(f.total), "total_n": float(f.total),
             "estado": _estado_vista(f), "nota": principal.mensagem if principal else None,
-            "por_preencher": _por_preencher(f), "exportada": f.estado == "exportada",
+            "por_preencher": _por_preencher(f), "exportada": f.estado == "exportada", "duvida": f.duvida,
             "nota_curta": ({"duplicado": "Possível duplicado", "nif_invalido": "NIF inválido",
                            "contas_nao_batem": "Totais não batem", "sem_data": "Sem data", "sem_total": "Sem total",
                            "iva_estrangeiro": "IVA estrangeiro", "adquirente_diferente": "Outro adquirente",
@@ -366,6 +366,11 @@ def _fila(s: Session, f: Fatura) -> list[str]:
         or_(Fatura.estado == "por_conferir", Fatura.id == f.id))
         .order_by(Fatura.data_emissao.asc().nulls_first(), Fatura.criado_em, Fatura.numero)).all()
     return [str(i) for i in ids]
+
+
+def _conversa(s: Session, fatura_id) -> list[dict]:
+    from .duvidas import conversa
+    return conversa(s, fatura_id)
 
 
 def detalhe(s: Session, fatura_id) -> dict:
@@ -407,6 +412,8 @@ def detalhe(s: Session, fatura_id) -> dict:
         "tratamento_iva": f.tratamento_iva, "origem_classificacao": f.origem_classificacao,
         "regra": {"criada": regra.criado_em.isoformat(), "geral": regra.empresa_id is None} if regra else None,
         "notas": f.notas or "",
+        "duvida": f.duvida, "mensagens": _conversa(s, f.id),
+        "contacto": {"nome": e.contacto_nome, "telefone": e.telefone, "email": e.email},
         "problemas": [{"id": str(p.id), "codigo": p.codigo, "nivel": p.nivel, "mensagem": p.mensagem}
                       for p in f.problemas if not p.resolvido],
         "duplicado_de": original,

@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 from ..auth.servico import ErroAuth
 from ..core import armazenamento
 from ..core.db import sessao_gabinete
+from ..faturas import duvidas
 from ..faturas import servico as svc
 from .auth import SessaoAtual, exigir_gabinete
 from .empresas import _mes
@@ -201,6 +202,10 @@ def paginas(documento_id: uuid.UUID, atual: SessaoAtual = Depends(exigir_gabinet
 def pagina(documento_id: uuid.UUID, n: int, atual: SessaoAtual = Depends(exigir_gabinete)):
     """Uma página do documento como imagem PNG, para ver em qualquer browser."""
     d = _no_gabinete(atual, lambda s: svc.documento(s, documento_id))
+    return pagina_png(d, n)
+
+
+def pagina_png(d, n: int) -> Response:
     caminho = armazenamento.caminho(d.chave_armazenamento)
     if not caminho.exists():
         raise ErroAuth(404, "ficheiro_em_falta", "O ficheiro original não está disponível.")
@@ -223,3 +228,20 @@ def pagina(documento_id: uuid.UUID, n: int, atual: SessaoAtual = Depends(exigir_
     buf = io.BytesIO()
     img.save(buf, "PNG", optimize=True)
     return Response(buf.getvalue(), media_type="image/png", headers={"Cache-Control": "private, max-age=86400"})
+
+
+# ---------------------------------------------------------------- dúvidas com o cliente
+
+class Mensagem(BaseModel):
+    texto: str = Field(max_length=2000)
+
+
+@router.post("/api/faturas/{fatura_id}/duvida")
+def perguntar(fatura_id: uuid.UUID, corpo: Mensagem, atual: SessaoAtual = Depends(exigir_gabinete)) -> dict:
+    """Escreve ao cliente sobre esta fatura. Na primeira mensagem avisa-o por SMS ou email."""
+    return _no_gabinete(atual, lambda s: duvidas.escrever_gabinete(s, atual.gabinete_id, atual.utilizador_id, fatura_id, corpo.texto))
+
+
+@router.post("/api/faturas/{fatura_id}/duvida/resolver")
+def resolver_duvida(fatura_id: uuid.UUID, atual: SessaoAtual = Depends(exigir_gabinete)) -> dict:
+    return _no_gabinete(atual, lambda s: duvidas.resolver(s, atual.gabinete_id, atual.utilizador_id, fatura_id))

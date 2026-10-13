@@ -3,7 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api, ErroApi, type DadosFatura, type Fatura, type Opcoes } from '../api'
 import { useAviso } from '../components/app'
 import { Aviso } from '../components/ui'
-import { nifValido, quando } from '../util'
+import { Escrever, Mensagens } from '../components/conversa'
+import { nifValido, quando, telefoneLegivel } from '../util'
 import { Origem } from './EmpresaFaturas'
 
 const TAXAS = [23, 13, 6, 0]
@@ -37,11 +38,12 @@ export default function ConferirFatura() {
   const [paginas, setPaginas] = useState(1)
   const [rejeitando, setRejeitando] = useState(false)
   const [motivo, setMotivo] = useState('')
+  const [perguntar, setPerguntar] = useState(false)
   const aviso = useAviso()
 
   useEffect(() => { api.classificacao().then(setOp).catch(() => {}) }, [])
   useEffect(() => {
-    setF(null); setErro(null); setZoom(1); setRodar(0); setRejeitando(false)
+    setF(null); setErro(null); setZoom(1); setRodar(0); setRejeitando(false); setPerguntar(false)
     api.fatura(id).then((r) => {
       setF(r); setForm(paraForm(r)); setLembrar(!r.regra); setPaginas(1)
       if (r.documento) fetch(`/api/documentos/${r.documento.id}/paginas`).then((x) => x.json()).then((x) => setPaginas(x.paginas ?? 1)).catch(() => {})
@@ -97,6 +99,16 @@ export default function ConferirFatura() {
     else nav(voltar, { state: { aviso: 'Fatura rejeitada. Não há mais faturas por conferir neste mês.' } })
   })
   const reabrir = () => f && correr(async () => { const r = await api.reabrir(f.id); setF(r); setForm(paraForm(r)) })
+  async function escrever(texto: string) {
+    if (!f) return false
+    try {
+      const r = await api.perguntar(f.id, texto)
+      setF({ ...f, duvida: r.duvida, mensagens: r.mensagens })
+      if (r.avisado) aviso.mostrar(r.avisado === 'sms' ? 'Enviado. O cliente recebeu um SMS com o link do portal.' : 'Enviado. O cliente recebeu um email com o link do portal.')
+      return true
+    } catch (e) { aviso.mostrar(e instanceof ErroApi ? e.message : 'Não foi possível enviar.', 'bad'); return false }
+  }
+  const fecharDuvida = () => f && correr(async () => { const r = await api.resolverDuvida(f.id); setF({ ...f, duvida: r.duvida, mensagens: r.mensagens }); aviso.mostrar('Dúvida resolvida.') })
   const resolver = (pid: string) => f && correr(async () => { const r = await api.resolverProblema(f.id, pid); setF(r) })
 
   if (erro && !f) return <div className="conferir"><div style={{ padding: 32 }}><Aviso>{erro}</Aviso><Link to="/painel" className="pf-btn mt14">Voltar ao painel</Link></div></div>
@@ -193,6 +205,27 @@ export default function ConferirFatura() {
             )}
             {porPreencher && !fechada && <div className="pf-alert pf-alert--info"><span className="pf-alert__tag">Info</span><div>Sem código QR: preencha os dados a partir do documento.</div></div>}
             {erro && <Aviso>{erro}</Aviso>}
+            {(f.mensagens.length > 0 || perguntar) && (
+              <section className={`conversa${f.duvida === 'resposta' ? ' conversa--nova' : ''}`} aria-labelledby="conversa-t">
+                <div className="conversa__cabeca">
+                  <h2 id="conversa-t">Dúvida com o cliente</h2>
+                  {f.duvida === 'pergunta' && <span className="pf-pill pf-pill--warn">À espera do cliente</span>}
+                  {f.duvida === 'resposta' && <span className="pf-pill pf-pill--ok">O cliente respondeu</span>}
+                  {!f.duvida && f.mensagens.length > 0 && <span className="pf-pill pf-pill--none">Resolvida</span>}
+                  <span style={{ flex: 1 }} />
+                  {f.duvida && <button type="button" className="pf-btn pf-btn--sm" onClick={fecharDuvida} disabled={aGravar}>Marcar como resolvida</button>}
+                  {!f.mensagens.length && <button type="button" className="pf-btn pf-btn--sm pf-btn--ghost" onClick={() => setPerguntar(false)}>Cancelar</button>}
+                </div>
+                <Mensagens mensagens={f.mensagens} eu="gabinete" />
+                <Escrever enviar={escrever} autoFocus={!f.mensagens.length}
+                  rotulo={f.duvida === 'pergunta' ? 'Acrescentar' : 'Enviar ao cliente'}
+                  placeholder={f.mensagens.length ? 'Escrever ao cliente…' : 'Ex.: Esta compra é da empresa ou pessoal?'}
+                  ajuda={f.duvida === 'pergunta' ? 'O cliente já foi avisado. Vê esta mensagem no portal.'
+                    : f.contacto.telefone ? `${f.contacto.nome ?? 'O cliente'} recebe um SMS para ${telefoneLegivel(f.contacto.telefone)} com o link do portal.`
+                    : f.contacto.email ? `${f.contacto.nome ?? 'O cliente'} recebe um email para ${f.contacto.email} com o link do portal.`
+                    : 'Esta empresa não tem telemóvel nem email: edite-a antes de perguntar.'} />
+              </section>
+            )}
             <fieldset disabled={fechada || aGravar} className="dados__campos">
 
             <div className="dados__secao">
@@ -287,6 +320,7 @@ export default function ConferirFatura() {
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button type="button" className="pf-btn pf-btn--danger" onClick={() => setRejeitando(true)} disabled={aGravar}>Rejeitar</button>
                     <button type="button" className="pf-btn pf-btn--ghost" onClick={gravar} disabled={aGravar}>Gravar sem conferir</button>
+                    {!f.mensagens.length && !perguntar && <button type="button" className="pf-btn pf-btn--ghost" onClick={() => setPerguntar(true)}>Perguntar ao cliente</button>}
                   </div>
                   <button type="submit" className="pf-btn pf-btn--primary botao-conferir" disabled={aGravar} aria-busy={aGravar}>
                     {aGravar ? 'Um momento…' : 'Conferida e seguinte'} <kbd>Enter</kbd>

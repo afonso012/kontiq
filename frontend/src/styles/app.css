@@ -422,3 +422,30 @@ a.pf-btn { text-decoration: none; }
 .lista-enviadas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .lista-enviadas li { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line); }
 .lista-enviadas li:last-child { border-bottom: 0; }
+
+/* Equipa */
+.pessoa { display: flex; align-items: center; gap: 12px; }
+.pessoa .pf-table__sub { display: block; }
+
+/* Dúvidas com o cliente */
+.conversa { border: 1px solid var(--line, #e6e8f0); border-radius: 20px; padding: 16px; display: grid; gap: 12px; background: var(--surface-sunk); }
+.conversa--nova { border-color: color-mix(in srgb, var(--brand, #4353e8) 45%, transparent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand, #4353e8) 10%, transparent); }
+.conversa__cabeca { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.conversa__cabeca h2 { font-size: 16px; font-weight: 500; margin: 0; }
+.conversa__lista { display: grid; gap: 8px; max-height: 280px; overflow-y: auto; padding-right: 2px; }
+.balao { max-width: 85%; justify-self: start; background: var(--surface); border: 1px solid var(--line); border-radius: 16px 16px 16px 4px; padding: 10px 14px; }
+.balao--eu { justify-self: end; background: var(--brand-soft, #eceefd); border-color: transparent; border-radius: 16px 16px 4px 16px; }
+.balao__texto { font-size: 15px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ink, #0e1121); }
+.balao__quem { font-size: 12px; color: var(--ink-muted); margin-top: 4px; }
+.conversa__escrever { display: grid; gap: 8px; }
+.conversa__texto { min-height: 64px; height: auto; resize: vertical; padding-top: 12px; padding-bottom: 12px; line-height: 1.45; font-family: inherit; }
+.conversa__acoes .pf-btn { white-space: nowrap; flex: none; }
+.conversa__acoes { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.nota-duvida { color: var(--ink-muted); }
+.nota-duvida.is-nova { color: var(--brand, #4353e8); font-weight: 500; }
+.portal__duvidas { display: grid; gap: 12px; }
+.duvida { padding: 16px; border-radius: 20px; display: grid; gap: 12px; }
+.duvida__fatura { display: flex; gap: 12px; align-items: center; }
+.duvida__miniatura { flex: none; width: 56px; height: 72px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); background: var(--surface); }
+.duvida__miniatura img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.mt8 { margin-top: 8px; }

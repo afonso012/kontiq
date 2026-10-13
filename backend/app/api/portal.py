@@ -7,15 +7,20 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 
+import uuid
+
 from fastapi import APIRouter, Depends, File, UploadFile
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from ..auth.servico import ErroAuth
 from ..core.db import sessao_gabinete
 from ..empresas.servico import MESES, euros
+from ..faturas import duvidas
 from ..faturas import servico as fsvc
 from ..models import Documento, Empresa, Fatura, Fornecedor, Gabinete, PedidoDocumentos, Utilizador
 from .auth import SessaoAtual, exigir_portal
+from .faturas import pagina_png
 
 router = APIRouter(prefix="/api/portal", tags=["Portal do cliente"])
 
@@ -59,6 +64,7 @@ def inicio(atual: SessaoAtual = Depends(exigir_portal)) -> dict:
             "empresa": {"nome": e.nome, "nif": e.nif}, "gabinete": {"nome": g.nome},
             "utilizador": {"nome": u.nome}, "mes_txt": f"{MESES[mes.month - 1]} de {mes.year}",
             "enviados_mes": este_mes, "enviados": enviados, "pedido": pedido_info,
+            "duvidas": duvidas.do_cliente(s, e.id),
         }
 
 
@@ -77,3 +83,25 @@ async def enviar(ficheiros: list[UploadFile] = File(...), atual: SessaoAtual = D
                                          else "Já tinha enviado este ficheiro." if r.estado == "repetido" else r.mensagem),
                             "fornecedor": r.fornecedor if r.fornecedor and not r.fornecedor.startswith("Fornecedor ") else None,
                             "total": r.total} for r in res]}
+
+
+class Resposta(BaseModel):
+    texto: str = Field(max_length=2000)
+
+
+@router.post("/duvidas/{fatura_id}")
+def responder(fatura_id: uuid.UUID, corpo: Resposta, atual: SessaoAtual = Depends(exigir_portal)) -> dict:
+    """O cliente responde a uma dúvida do gabinete sobre uma fatura da própria empresa."""
+    with sessao_gabinete(atual.gabinete_id) as s:
+        return duvidas.responder_cliente(s, atual.gabinete_id, atual.empresa_id, atual.utilizador_id, fatura_id, corpo.texto)
+
+
+@router.get("/documentos/{documento_id}/pagina/{n}")
+def pagina(documento_id: uuid.UUID, n: int, atual: SessaoAtual = Depends(exigir_portal)):
+    """Pré-visualização de um documento da própria empresa (para o cliente saber de que fatura se fala)."""
+    with sessao_gabinete(atual.gabinete_id) as s:
+        d = s.get(Documento, documento_id)
+        if not d or str(d.empresa_id) != atual.empresa_id:
+            raise ErroAuth(404, "nao_encontrado", "Documento não encontrado.")
+        s.expunge(d)
+    return pagina_png(d, n)

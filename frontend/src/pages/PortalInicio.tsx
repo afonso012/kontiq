@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { api, ErroApi, type PortalInicio as Dados } from '../api'
+import { api, ErroApi, type DuvidaPortal, type PortalInicio as Dados } from '../api'
 import { Aviso } from '../components/ui'
+import { Escrever, Mensagens } from '../components/conversa'
 import { useSessao } from '../sessao'
 import { quando } from '../util'
 
@@ -76,6 +77,15 @@ export default function PortalInicio() {
             <div>O gabinete está à espera das faturas de <b>{d.pedido.periodo_txt}</b>.</div></div>
         )}
 
+        {d && d.duvidas.length > 0 && (
+          <section className="portal__duvidas" aria-labelledby="duvidas-t">
+            <h2 id="duvidas-t" className="forte17" style={{ margin: 0 }}>
+              {d.duvidas.length === 1 ? 'O gabinete tem uma dúvida' : `O gabinete tem ${d.duvidas.length} dúvidas`}
+            </h2>
+            {d.duvidas.map((x) => <CartaoDuvida key={x.fatura_id} d={x} atualizar={ler} />)}
+          </section>
+        )}
+
         <button type="button" className="pf-btn pf-btn--primary botao-grande portal__foto" onClick={() => camara.current?.click()} disabled={aEnviar}>
           <span>Tirar foto a uma fatura</span>
           <span className="pf-btn__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg></span>
@@ -125,5 +135,40 @@ export default function PortalInicio() {
         </section>
       </div>
     </div>
+  )
+}
+
+function CartaoDuvida({ d, atualizar }: { d: DuvidaPortal; atualizar: () => void }) {
+  const [mensagens, setMensagens] = useState(d.mensagens)
+  const [estado, setEstado] = useState(d.estado)
+  const [erro, setErro] = useState<string | null>(null)
+  const img = d.documento ? `/api/portal/documentos/${d.documento.id}/pagina/1` : null
+  async function responder(texto: string) {
+    setErro(null)
+    try {
+      const r = await api.responderDuvida(d.fatura_id, texto)
+      setMensagens(r.mensagens); setEstado(r.estado)
+      return true
+    } catch (e) {
+      setErro(e instanceof ErroApi ? e.message : 'Não foi possível enviar.')
+      if (e instanceof ErroApi && e.codigo === 'sem_duvida') atualizar()
+      return false
+    }
+  }
+  return (
+    <article className="duvida pf-glass">
+      <div className="duvida__fatura">
+        {img && <a href={img} target="_blank" rel="noreferrer" className="duvida__miniatura" aria-label="Ver a fatura"><img src={img} alt="" onError={(e) => { (e.currentTarget.parentElement as HTMLElement).style.display = 'none' }} /></a>}
+        <div style={{ minWidth: 0 }}>
+          <div className="forte15 cortar">{d.fornecedor ?? d.documento?.nome ?? 'Fatura'}</div>
+          <div className="muted13">{[d.numero, d.data ? new Date(d.data).toLocaleDateString('pt-PT') : null, d.total].filter(Boolean).join(' · ')}</div>
+          {estado === 'resposta' && <span className="pf-pill pf-pill--ok mt8">Respondida</span>}
+        </div>
+      </div>
+      <Mensagens mensagens={mensagens} eu="cliente" />
+      {erro && <Aviso>{erro}</Aviso>}
+      <Escrever enviar={responder} rotulo={estado === 'resposta' ? 'Acrescentar' : 'Responder'}
+        placeholder="Escreva a sua resposta…" ajuda={estado === 'resposta' ? 'O gabinete já recebeu a sua resposta.' : undefined} />
+    </article>
   )
 }

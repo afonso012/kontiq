@@ -102,6 +102,8 @@ class Fatura(ComId, ComDatas, Base):
     eliminada_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # Lote da exportação que a levou para o programa de contabilidade.
     exportacao_lote: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), index=True)
+    # Dúvida com o cliente: None, "pergunta" (à espera do cliente) ou "resposta" (o cliente respondeu).
+    duvida: Mapped[str | None] = mapped_column(String(10))
 
     linhas_iva: Mapped[list["LinhaIVA"]] = relationship(back_populates="fatura", cascade="all, delete-orphan")
     problemas: Mapped[list["ProblemaFatura"]] = relationship(back_populates="fatura", cascade="all, delete-orphan")
@@ -162,5 +164,6 @@ class Comentario(ComId, Base):
     gabinete_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("gabinetes.id", ondelete="CASCADE"))
     fatura_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("faturas.id", ondelete="CASCADE"), index=True)
     autor_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("utilizadores.id", ondelete="SET NULL"))
+    lado: Mapped[str] = mapped_column(String(10), server_default="gabinete")
     texto: Mapped[str] = mapped_column(Text)
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

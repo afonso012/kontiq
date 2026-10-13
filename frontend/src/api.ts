@@ -13,7 +13,7 @@ export class ErroApi extends Error {
   }
 }
 
-async function pedido<T>(metodo: 'GET' | 'POST' | 'PUT', caminho: string, corpo?: unknown): Promise<T> {
+async function pedido<T>(metodo: 'GET' | 'POST' | 'PUT' | 'DELETE', caminho: string, corpo?: unknown): Promise<T> {
   let r: Response
   try {
     r = await fetch(caminho, {
@@ -91,6 +91,19 @@ export const api = {
   exportar: (dados: { periodo: string; empresas: string[]; formato: string; incluir_exportadas: boolean; marcar: boolean }) =>
     pedido<{ lote: string; nome: string; faturas: number; empresas: number }>('POST', '/api/exportacoes', dados),
   desfazerExportacao: (lote: string) => pedido<{ faturas: number }>('POST', `/api/exportacoes/${lote}/desfazer`),
+  perguntar: (id: string, texto: string) =>
+    pedido<{ duvida: 'pergunta' | 'resposta' | null; mensagens: MensagemDuvida[]; avisado: 'sms' | 'email' | null }>('POST', `/api/faturas/${id}/duvida`, { texto }),
+  resolverDuvida: (id: string) => pedido<{ duvida: null; mensagens: MensagemDuvida[] }>('POST', `/api/faturas/${id}/duvida/resolver`),
+  responderDuvida: (id: string, texto: string) => pedido<{ estado: 'resposta'; mensagens: MensagemDuvida[] }>('POST', `/api/portal/duvidas/${id}`, { texto }),
+  equipa: () => pedido<Equipa>('GET', '/api/equipa'),
+  convidarColega: (email: string, papel: string) => pedido<{ id: string; email: string }>('POST', '/api/equipa/convites', { email, papel }),
+  reenviarConvite: (id: string) => pedido('POST', `/api/equipa/convites/${id}/reenviar`),
+  cancelarConvite: (id: string) => pedido('DELETE', `/api/equipa/convites/${id}`),
+  mudarPapel: (id: string, papel: string) => pedido('PUT', `/api/equipa/membros/${id}`, { papel }),
+  removerMembro: (id: string) => pedido('DELETE', `/api/equipa/membros/${id}`),
+  verConvite: (token: string) => pedido<ConviteEquipa>('GET', `/api/convites/${encodeURIComponent(token)}`),
+  aceitarConvite: (token: string, nome: string, password: string) =>
+    pedido('POST', `/api/convites/${encodeURIComponent(token)}/aceitar`, { nome, password }),
   pedirFaturas: (id: string, periodo: string) => pedido<{ canal: 'sms' | 'email' }>('POST', `/api/empresas/${id}/pedir-faturas`, { periodo }),
 }
 
@@ -145,7 +158,7 @@ export type EstadoFatura = 'ok' | 'warn' | 'bad' | 'rejeitada'
 export type LinhaFatura = {
   id: string; data: string | null; fornecedor: string | null; nif: string | null; numero: string | null; tipo: string
   metodo: 'qr' | 'ia' | 'manual'; confianca: number | null; conta: string | null; conta_nome: string | null
-  iva: string; total: string; total_n: number; estado: EstadoFatura; nota: string | null; nota_curta: string | null; exportada?: boolean
+  iva: string; total: string; total_n: number; estado: EstadoFatura; nota: string | null; nota_curta: string | null; exportada?: boolean; duvida?: 'pergunta' | 'resposta' | null
 }
 
 export type FaturasEmpresa = {
@@ -174,6 +187,9 @@ export type Fatura = {
   categoria_id: string | null; conta: string | null; tratamento_iva: string; origem_classificacao: string
   regra: { criada: string; geral: boolean } | null
   notas: string
+  duvida: 'pergunta' | 'resposta' | null
+  mensagens: MensagemDuvida[]
+  contacto: { nome: string | null; telefone: string | null; email: string | null }
   problemas: { id: string; codigo: string; nivel: 'erro' | 'aviso'; mensagem: string }[]
   duplicado_de: string | null
   fila: { posicao: number; total: number; anterior: string | null; seguinte: string | null }
@@ -200,4 +216,22 @@ export type PortalInicio = {
   enviados: { id: string; nome: string; enviado_em: string; canal: string; por_mim: boolean; estado: 'recebida' | 'tratada' | 'rejeitada'
     fornecedor: string | null; total: string | null; data: string | null }[]
   pedido: { periodo_txt: string; enviado_em: string | null } | null
+  duvidas: DuvidaPortal[]
 }
+
+export type MensagemDuvida = { id: string; lado: 'gabinete' | 'cliente'; autor: string | null; texto: string; em: string }
+export type DuvidaPortal = {
+  fatura_id: string; estado: 'pergunta' | 'resposta'; numero: string | null; fornecedor: string | null
+  data: string | null; total: string | null; documento: { id: string; nome: string } | null; mensagens: MensagemDuvida[]
+}
+
+export type MembroEquipa = {
+  id: string; utilizador_id: string; nome: string; email: string; papel: 'dono' | 'admin' | 'colaborador'; papel_nome: string
+  ultimo_login: string | null; ativo: boolean
+}
+export type Equipa = {
+  eu: { id: string; papel: string; pode_gerir: boolean }
+  membros: MembroEquipa[]
+  convites: { id: string; email: string; papel: string; papel_nome: string; criado_em: string; expira_em: string }[]
+}
+export type ConviteEquipa = { gabinete: string; email: string; papel: string; convidado_por: string | null; conta_existe: boolean }
