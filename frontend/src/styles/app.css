@@ -413,3 +413,12 @@ fieldset:disabled .pf-field__input, fieldset:disabled .sel, fieldset:disabled .i
 .linha-apagada td { opacity: .55; }
 .nav__item:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 a.pf-btn { text-decoration: none; }
+
+/* Portal: início */
+.portal__foto { justify-content: space-between; height: 64px !important; font-size: 17px !important; }
+.portal__foto .pf-btn__arrow { width: 48px !important; height: 48px !important; }
+.portal__foto .pf-btn__arrow svg { width: 22px; height: 22px; }
+.portal__enviados { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+.lista-enviadas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.lista-enviadas li { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.lista-enviadas li:last-child { border-bottom: 0; }

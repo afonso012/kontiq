@@ -126,10 +126,12 @@ echo ""
 echo "  Aplicação ............. http://localhost:8000"
 echo "  Emails e SMS de teste . http://localhost:8025"
 echo "  Documentação da API ... http://localhost:8000/docs"
+IP_LOCAL=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null)
+[[ -n "$IP_LOCAL" ]] && echo "  No telemóvel (mesma rede Wi-Fi): http://$IP_LOCAL:8000/portal"
 echo ""
 echo "  Contabilista (demo): demo@faturas.local / demonstracao-2026"
 echo "  Cliente no portal (demo): telemóvel 912 345 678 ou joaquim@faroleiro.local"
 echo ""
 echo "ESTADO: A CORRER"
 echo "Para parar: feche esta janela (ou Ctrl+C)."
-uvicorn app.main:app --port 8000
+uvicorn app.main:app --host 0.0.0.0 --port 8000

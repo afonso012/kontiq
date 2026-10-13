@@ -76,6 +76,17 @@ export const api = {
     if (!r.ok) throw new ErroApi(r.status, dados?.codigo ?? 'erro', dados?.mensagem ?? (r.status === 413 ? 'Ficheiros demasiado grandes.' : 'Não foi possível carregar.'))
     return dados as { resultados: ResultadoCarregar[] }
   },
+  portalInicio: () => pedido<PortalInicio>('GET', '/api/portal/inicio'),
+  enviarPortal: async (ficheiros: File[]) => {
+    const fd = new FormData()
+    ficheiros.forEach((f) => fd.append('ficheiros', f, f.name))
+    let r: Response
+    try { r = await fetch('/api/portal/documentos', { method: 'POST', body: fd, credentials: 'same-origin' }) }
+    catch { throw new ErroApi(0, 'rede', 'Sem ligação. Verifique a internet e tente outra vez.') }
+    const dados = await r.json().catch(() => null)
+    if (!r.ok) throw new ErroApi(r.status, dados?.codigo ?? 'erro', dados?.mensagem ?? 'Não foi possível enviar.')
+    return dados as { resultados: { nome: string; ok: boolean; repetido: boolean; mensagem: string; fornecedor: string | null; total: string | null }[] }
+  },
   previsaoExportacao: (periodo: string) => pedido<PrevisaoExportacao>('GET', `/api/exportacoes/previsao?periodo=${encodeURIComponent(periodo)}`),
   exportar: (dados: { periodo: string; empresas: string[]; formato: string; incluir_exportadas: boolean; marcar: boolean }) =>
     pedido<{ lote: string; nome: string; faturas: number; empresas: number }>('POST', '/api/exportacoes', dados),
@@ -181,4 +192,12 @@ export type PrevisaoExportacao = {
   formatos: { id: string; nome: string }[]
   historico: { lote: string; em: string; formato: string; formato_nome: string; periodo: string; periodo_txt: string; faturas: number
     empresas: number; empresa: string | null; nome: string | null; quem: string | null; marcou: boolean; desfeita: string | null }[]
+}
+
+export type PortalInicio = {
+  empresa: { nome: string; nif: string }; gabinete: { nome: string }; utilizador: { nome: string }
+  mes_txt: string; enviados_mes: number
+  enviados: { id: string; nome: string; enviado_em: string; canal: string; por_mim: boolean; estado: 'recebida' | 'tratada' | 'rejeitada'
+    fornecedor: string | null; total: string | null; data: string | null }[]
+  pedido: { periodo_txt: string; enviado_em: string | null } | null
 }

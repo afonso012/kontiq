@@ -25,7 +25,8 @@
 ## Fase 2 — Interfaces
 - [x] Painel do gabinete: números do mês, o que precisa de atenção, empresas por estado
 - [x] Faturas da empresa, carregar PDFs/fotos e conferir (documento ao lado, fila, duplicados, regras)
-- [ ] Portal do cliente: enviar faturas, ver o que falta, responder a comentários
+- [x] Portal do cliente: enviar faturas (foto ou ficheiro), ver o estado do que enviou e os pedidos do gabinete
+- [ ] Portal do cliente: responder a comentários
 - [ ] Email de entrada por empresa
 
 ## Fase 3 — Leitura com IA
