@@ -79,7 +79,20 @@ export default function PortalInicio() {
         {erro && <Aviso>{erro}</Aviso>}
         {d?.pedido && (
           <div className="pf-alert pf-alert--warn"><span className="pf-alert__tag">Pedido</span>
-            <div>O gabinete está à espera das faturas de <b>{d.pedido.periodo_txt}</b>.</div></div>
+            <div>
+              {d.pedido.em_falta_total > 0
+                ? <>Estas faturas de <b>{d.pedido.periodo_txt}</b> aparecem nas Finanças mas ainda não chegaram ao gabinete:</>
+                : <>O gabinete está à espera das faturas de <b>{d.pedido.periodo_txt}</b>.</>}
+              {d.pedido.em_falta_total > 0 && (
+                <ul className="em-falta">
+                  {d.pedido.em_falta.map((x) => (
+                    <li key={`${x.fornecedor}-${x.numero}`}><b>{x.fornecedor}</b>
+                      <span className="em-falta__det"><span className="pf-mono">{x.numero}</span>{x.total && <span className="pf-mono">{x.total}</span>}</span></li>
+                  ))}
+                  {d.pedido.em_falta_total > d.pedido.em_falta.length && <li>e mais {d.pedido.em_falta_total - d.pedido.em_falta.length}</li>}
+                </ul>
+              )}
+            </div></div>
         )}
 
         {d && d.duvidas.length > 0 && (

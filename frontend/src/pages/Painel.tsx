@@ -184,7 +184,7 @@ function PrimeiraVez({ d, adicionar }: { d: DadosPainel; adicionar: () => void }
     <div className="primeira">
       <div className="primeira__texto">
         <span className="pf-pill pf-pill--new">Conta criada</span>
-        <h1 className="primeira__titulo">Bem-vindo, {primeiro}. Falta <span className="pf-hl">pouco</span>.</h1>
+        <h1 className="primeira__titulo">Olá, {primeiro}. Falta <span className="pf-hl">pouco</span>.</h1>
         <p className="primeira__lead">Três passos para receber as primeiras faturas dos seus clientes este mês.</p>
       </div>
       <ol className="passos-lista">

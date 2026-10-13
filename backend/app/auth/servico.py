@@ -129,7 +129,7 @@ def _emitir_codigo(s: Session, u: Utilizador, finalidade: str, canal: str, desti
 def _enviar_codigo(finalidade: str, canal: str, destino: str, codigo: str, nome: str) -> None:
     primeiro = nome.split()[0] if nome else ""
     if canal == "sms":
-        enviar_sms(destino, f"O seu código de entrada no portal de faturas é {codigo}. Válido durante 15 minutos.")
+        enviar_sms(destino, f"Código de entrada no portal de faturas: {codigo}. Válido 15 minutos.")
         return
     textos = {
         "confirmar_email": ("Confirme o seu email", "Confirme o seu email",

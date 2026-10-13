@@ -61,9 +61,42 @@ def enviar_email(destino: str, assunto: str, titulo: str, paragrafos: list[str],
         return False
 
 
+# Alfabeto GSM 03.38. Uma letra fora dele (ã, ç, ó, ú…) obriga o SMS inteiro a ir em
+# Unicode, com 70 caracteres por parte em vez de 160, e cada parte é paga.
+_GSM = set("@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !\"#¤%&'()*+,-./0123456789:;<=>?¡"
+           "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà")
+_GSM_EXT = set("^{}\\[~]|€")  # valem 2 caracteres
+_TROCAR = str.maketrans({
+    "á": "a", "â": "a", "ã": "a", "ç": "c", "ê": "e", "í": "i", "ó": "o", "ô": "o", "õ": "o", "ú": "u",
+    "Á": "A", "Â": "A", "Ã": "A", "À": "A", "Ê": "E", "Í": "I", "Ó": "O", "Ô": "O", "Õ": "O", "Ú": "U",
+    "\u00a0": " ", "\u202f": " ", "“": '"', "”": '"', "‘": "'", "’": "'", "–": "-", "—": "-", "…": "...", "º": "o", "ª": "a",
+})
+
+
+def texto_sms(texto: str) -> str:
+    """Troca só as letras que obrigariam a Unicode (é e à existem no alfabeto GSM e ficam)."""
+    t = " ".join(texto.translate(_TROCAR).split())
+    return "".join(c if c in _GSM or c in _GSM_EXT else "?" for c in t)
+
+
+def partes_sms(texto: str) -> int:
+    """Quantas partes (pagas uma a uma) ocupa um SMS já convertido por texto_sms."""
+    n = sum(2 if c in _GSM_EXT else 1 for c in texto)
+    return 1 if n <= 160 else -(-n // 153)
+
+
+def escolher_sms(*opcoes: str) -> str:
+    """A primeira versão que cabe numa parte (uma parte = um SMS pago); se nenhuma couber, a mais curta."""
+    for o in opcoes:
+        if partes_sms(texto_sms(o)) == 1:
+            return o
+    return min(opcoes, key=lambda o: len(texto_sms(o)))
+
+
 def enviar_sms(numero: str, texto: str) -> None:
     s = get_settings()
+    texto = texto_sms(texto)
     if s.sms_modo != "simulado":
         raise NotImplementedError("Envio real de SMS ainda não configurado.")
-    log.warning("SMS simulado para %s: %s", numero, texto)
+    log.warning("SMS simulado para %s (%d parte%s): %s", numero, partes_sms(texto), "" if partes_sms(texto) == 1 else "s", texto)
     enviar_email(f"sms-{numero.lstrip('+')}@telemovel.local", f"SMS para {numero}", "SMS (simulado)", [texto])

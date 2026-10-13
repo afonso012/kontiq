@@ -17,6 +17,7 @@ from ..auth.servico import ErroAuth
 from ..core.db import sessao_gabinete
 from ..empresas.servico import MESES, euros
 from ..faturas import duvidas
+from ..faturas import efatura
 from ..faturas import servico as fsvc
 from ..models import Documento, Empresa, Fatura, Fornecedor, Gabinete, PedidoDocumentos, Utilizador
 from .auth import SessaoAtual, exigir_portal
@@ -57,9 +58,13 @@ def inicio(atual: SessaoAtual = Depends(exigir_portal)) -> dict:
         pedido_info = None
         if pedido:
             depois = any(d.criado_em > pedido.enviado_em for d, _, _ in linhas) if pedido.enviado_em else False
-            if not depois:
+            # Faturas que aparecem no e-Fatura e ainda não chegaram (calculado agora, não no dia do pedido).
+            em_falta = [{"fornecedor": x["fornecedor"] or f"NIF {x['nif']}", "numero": x["numero"], "data": x["data"],
+                         "total": x["total"]} for x in efatura.cruzar(s, e.id, pedido.periodo)["em_falta"]]
+            if not depois or em_falta:
                 pedido_info = {"periodo_txt": f"{MESES[pedido.periodo.month - 1]} de {pedido.periodo.year}",
-                               "enviado_em": pedido.enviado_em.isoformat() if pedido.enviado_em else None}
+                               "enviado_em": pedido.enviado_em.isoformat() if pedido.enviado_em else None,
+                               "em_falta": em_falta[:20], "em_falta_total": len(em_falta)}
         return {
             "empresa": {"nome": e.nome, "nif": e.nif}, "gabinete": {"nome": g.nome},
             "utilizador": {"nome": u.nome}, "mes_txt": f"{MESES[mes.month - 1]} de {mes.year}",

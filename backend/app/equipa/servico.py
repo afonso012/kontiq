@@ -69,8 +69,8 @@ def listar(s: Session, gabinete_id, utilizador_id) -> dict:
 def _enviar(s: Session, c: Convite, token: str, quem: Utilizador) -> None:
     g = s.get(Gabinete, c.gabinete_id)
     url = f"{get_settings().url_publica.rstrip('/')}/convite/{token}"
-    enviar_email(c.email, f"{quem.nome} convidou-o para o gabinete {g.nome}", "Convite para a equipa",
-                 [f"{quem.nome} convidou-o para trabalhar nas faturas dos clientes do gabinete {g.nome}.",
+    enviar_email(c.email, f"Convite de {quem.nome} para o gabinete {g.nome}", "Convite para a equipa",
+                 [f"{quem.nome} enviou-lhe um convite para trabalhar nas faturas dos clientes do gabinete {g.nome}.",
                   f"Para aceitar, abra este endereço: {url}",
                   "O convite é válido durante 7 dias. Se não estava à espera dele, ignore este email."])
 
@@ -162,11 +162,11 @@ def remover(s: Session, gabinete_id, utilizador_id, membro_id) -> None:
 def _convite_valido(s: Session, token: str) -> Convite:
     c = s.scalar(select(Convite).where(Convite.token_hash == _hash(token or "")))
     if not c or c.empresa_id is not None:
-        raise ErroAuth(404, "convite_invalido", "Este convite não existe. Peça um novo a quem o convidou.")
+        raise ErroAuth(404, "convite_invalido", "Este convite não existe. Peça um novo a quem lhe enviou o convite.")
     if c.aceite_em:
         raise ErroAuth(410, "convite_usado", "Este convite já foi aceite. Entre com o seu email e palavra-passe.")
     if c.expira_em <= agora():
-        raise ErroAuth(410, "convite_expirado", "Este convite expirou. Peça um novo a quem o convidou.")
+        raise ErroAuth(410, "convite_expirado", "Este convite expirou. Peça um novo a quem lhe enviou o convite.")
     return c
 
 

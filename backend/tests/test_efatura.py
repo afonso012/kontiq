@@ -65,7 +65,7 @@ def test_cruzar_pedir_e_painel(cliente, enviados, limpar, mensagens, avisos):
 
     p = cliente.post(f"/api/empresas/{eid}/efatura/pedir", json={"periodo": MES})
     assert p.status_code == 200 and p.json() == {"canal": "sms", "faturas": 1}
-    assert "Posto da Moita (FS 01/31877)" in avisos[-1]
+    assert "falta 1 fatura de" in avisos[-1] and "já aparece nas Finanças. Veja qual" in avisos[-1]
     assert cliente.post(f"/api/empresas/{eid}/efatura/pedir", json={"periodo": MES}).status_code == 429
 
     # O cliente envia a que faltava: deixa de estar em falta. Reimportar substitui o mês.

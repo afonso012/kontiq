@@ -33,7 +33,7 @@ def test_pergunta_resposta_e_resolver(cliente, enviados, limpar, mensagens, avis
     r = cliente.post(f"/api/faturas/{fid}/duvida", json={"texto": "Esta  compra é da   empresa ou pessoal?"})
     assert r.status_code == 200, r.text
     assert r.json()["avisado"] == "sms" and r.json()["duvida"] == "pergunta"
-    assert len(avisos) == 1 and "FT 9/1" in avisos[0]["texto"] and "Esta compra é da empresa ou pessoal?" in avisos[0]["texto"]
+    assert len(avisos) == 1 and "FT 9/1" in avisos[0]["texto"] and "da empresa Cliente Portal, Lda" in avisos[0]["texto"]
     # Uma segunda mensagem antes da resposta não volta a avisar.
     assert cliente.post(f"/api/faturas/{fid}/duvida", json={"texto": "É urgente."}).json()["avisado"] is None
     assert len(avisos) == 1

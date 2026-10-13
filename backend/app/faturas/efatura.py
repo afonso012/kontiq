@@ -25,7 +25,7 @@ from sqlalchemy import delete, false, func, select
 from sqlalchemy.orm import Session
 
 from ..auth.servico import ErroAuth
-from ..core.envio import enviar_email, enviar_sms
+from ..core.envio import enviar_email, enviar_sms, escolher_sms
 from ..empresas.servico import MESES, _url_portal, euros
 from ..models import Empresa, Fatura, Fornecedor, Gabinete, LinhaEfatura, PedidoDocumentos, RegistoAtividade
 
@@ -248,7 +248,11 @@ def pedir_em_falta(s: Session, gabinete_id, utilizador_id, empresa_id, mes: date
              f"recebeu: {lista}{mais}. Pode enviá-las em {_url_portal()}")
     canal = "sms" if e.telefone else "email"
     if canal == "sms":
-        enviar_sms(e.telefone, texto)
+        # A lista completa aparece no portal; o SMS só diz quantas e onde ver.
+        um = len(faltam) == 1
+        quantas = "falta 1 fatura" if um else f"faltam {len(faltam)} faturas"
+        fim = f"{quantas} de {MESES[mes.month - 1]} que já {'aparece' if um else 'aparecem'} nas Finanças. Veja {'qual' if um else 'quais'} em {_url_portal()}"
+        enviar_sms(e.telefone, escolher_sms(f"Olá{(' ' + nome) if nome else ''}. {g.nome}: {fim}", f"{g.nome}: {fim}"))
     else:
         enviar_email(e.email, f"Faturas de {MESES[mes.month - 1]} em falta", "Faturas em falta", [texto])
     s.add(PedidoDocumentos(gabinete_id=gabinete_id, empresa_id=e.id, periodo=mes, mensagem=texto, canal=canal,

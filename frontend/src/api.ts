@@ -284,7 +284,8 @@ export type PortalInicio = {
   mes_txt: string; enviados_mes: number
   enviados: { id: string; nome: string; enviado_em: string; canal: string; por_mim: boolean; estado: 'recebida' | 'tratada' | 'rejeitada'
     fornecedor: string | null; total: string | null; data: string | null }[]
-  pedido: { periodo_txt: string; enviado_em: string | null } | null
+  pedido: { periodo_txt: string; enviado_em: string | null
+    em_falta: { fornecedor: string; numero: string; data: string; total: string | null }[]; em_falta_total: number } | null
   duvidas: DuvidaPortal[]
 }
 

@@ -12,7 +12,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..auth.servico import ErroAuth
-from ..core.envio import enviar_email, enviar_sms
+from ..core.envio import enviar_email, enviar_sms, escolher_sms
 from ..empresas.servico import _url_portal, euros
 from ..models import Comentario, Documento, Empresa, Fatura, Fornecedor, Gabinete, RegistoAtividade, Utilizador
 
@@ -47,7 +47,7 @@ def _descricao(s: Session, f: Fatura) -> str:
     forn = s.get(Fornecedor, f.fornecedor_id) if f.fornecedor_id else None
     partes = [f"a fatura {f.numero}" if f.numero else "uma fatura"]
     if forn and not forn.nome.startswith("Fornecedor "):
-        partes.append(f"de {forn.nome}")
+        partes.append(f"do fornecedor {forn.nome}")
     if f.total:
         partes.append(f"({euros(f.total)})")
     return " ".join(partes)
@@ -68,10 +68,18 @@ def escrever_gabinete(s: Session, gabinete_id, utilizador_id, fatura_id, texto: 
         g = s.get(Gabinete, gabinete_id)
         nome = (e.contacto_nome or "").split()[0] if e.contacto_nome else ""
         msg = (f"Olá{(' ' + nome) if nome else ''}. O gabinete {g.nome} tem uma dúvida sobre {_descricao(s, f)} "
-               f"da {e.nome}: \"{t[:160]}{'…' if len(t) > 160 else ''}\" Responda em {_url_portal()}")
+               f"da empresa {e.nome}: \"{t[:160]}{'…' if len(t) > 160 else ''}\" Responda em {_url_portal()}")
         canal = "sms" if e.telefone else "email"
         if canal == "sms":
-            enviar_sms(e.telefone, msg)
+            # A pergunta fica no portal; o SMS só avisa (curto, numa parte).
+            numero = f" {f.numero}" if f.numero else ""
+            valor = f" ({euros(f.total)})" if f.total else ""
+            ola = f"Olá{(' ' + nome) if nome else ''}. "
+            enviar_sms(e.telefone, escolher_sms(
+                f"{ola}{g.nome} tem uma pergunta sobre a fatura{numero}{valor} da empresa {e.nome}. Responda em {_url_portal()}",
+                f"{ola}{g.nome} tem uma pergunta sobre a fatura{numero}{valor}. Responda em {_url_portal()}",
+                f"{g.nome} tem uma pergunta sobre a fatura{numero}{valor}. Responda em {_url_portal()}",
+                f"{g.nome} tem uma pergunta sobre a fatura{numero}. Responda em {_url_portal()}"))
         else:
             enviar_email(e.email, f"Dúvida sobre {_descricao(s, f)}", "O seu gabinete tem uma dúvida", [msg])
     s.add(RegistoAtividade(gabinete_id=gabinete_id, utilizador_id=utilizador_id, entidade="fatura", entidade_id=f.id,

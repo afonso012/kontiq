@@ -552,3 +552,9 @@ a.pf-btn { text-decoration: none; }
 .legal__corpo p, .legal__corpo ul { margin: 0; color: var(--ink); }
 .legal__corpo ul { padding-left: 20px; display: grid; gap: 6px; }
 .legal__lead { font-size: 18px; color: var(--ink-muted) !important; }
+
+/* Portal: faturas em falta do e-Fatura */
+.em-falta { margin: 8px 0 0; padding-left: 0; list-style: none; display: grid; gap: 4px; font-size: 14px; line-height: 20px; }
+.em-falta li { display: flex; flex-direction: column; }
+.em-falta__det { display: flex; flex-wrap: wrap; gap: 0 12px; color: var(--ink-muted); }
+.em-falta .pf-mono { font-size: 13px; white-space: nowrap; }

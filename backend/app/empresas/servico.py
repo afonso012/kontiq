@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 from ..auth.servico import ErroAuth
 from ..core import seguranca as seg
 from ..core.config import get_settings
-from ..core.envio import enviar_email, enviar_sms
+from ..core.envio import escolher_sms, enviar_email, enviar_sms
 from ..domain.nif import nif_valido
 from ..models import (
     AcessoPortal, Empresa, Fatura, Gabinete, PedidoDocumentos, ProblemaFatura, RegistoAtividade, Utilizador,
@@ -259,12 +259,14 @@ def convidar_portal(s: Session, gabinete_id, utilizador_id, e: Empresa) -> str:
     g = s.get(Gabinete, gabinete_id)
     primeiro = e.contacto_nome.split()[0]
     if e.telefone:
-        enviar_sms(e.telefone, f"Olá {primeiro}. O gabinete {g.nome} convidou-o a enviar as faturas da {e.nome} "
-                               f"pelo portal: {_url_portal()} (entra com um código, sem palavra-passe).")
+        enviar_sms(e.telefone, escolher_sms(
+            f"Olá {primeiro}. {g.nome}: envie as faturas da empresa {e.nome} pelo portal {_url_portal()}",
+            f"{g.nome}: envie as faturas da empresa {e.nome} pelo portal {_url_portal()}",
+            f"{g.nome}: envie as suas faturas pelo portal {_url_portal()}"))
         canal = "sms"
     else:
-        enviar_email(e.email, f"{g.nome} convidou-o para o portal de faturas", "Convite para o portal de faturas",
-                     [f"Olá {primeiro}, o gabinete {g.nome} convidou-o a enviar as faturas da {e.nome} pelo portal.",
+        enviar_email(e.email, f"Convite de {g.nome} para o portal de faturas", "Convite para o portal de faturas",
+                     [f"Olá {primeiro}, o gabinete {g.nome} enviou-lhe um convite para enviar as faturas da empresa {e.nome} pelo portal.",
                       f"Entre em {_url_portal()} com este email. Recebe um código, sem palavra-passe."])
         canal = "email"
     _registar(s, gabinete_id, utilizador_id, e.id, "convite_portal", {"canal": canal})
@@ -285,9 +287,14 @@ def pedir_faturas(s: Session, gabinete_id, utilizador_id, empresa_id, mes: date)
     g = s.get(Gabinete, gabinete_id)
     nome = (e.contacto_nome or "").split()[0] if e.contacto_nome else ""
     texto = (f"Olá{(' ' + nome) if nome else ''}. O gabinete {g.nome} ainda não recebeu as faturas de compras de "
-             f"{MESES[mes.month - 1]} da {e.nome}. Pode enviá-las em {_url_portal()}")
+             f"{MESES[mes.month - 1]} da empresa {e.nome}. Pode enviá-las em {_url_portal()}")
     canal = "sms" if e.telefone else "email"
     if canal == "sms":
+        m = MESES[mes.month - 1]
+        texto = escolher_sms(
+            f"Olá{(' ' + nome) if nome else ''}. {g.nome}: faltam as faturas de compras de {m} da empresa {e.nome}. Envie em {_url_portal()}",
+            f"{g.nome}: faltam as faturas de compras de {m} da empresa {e.nome}. Envie em {_url_portal()}",
+            f"{g.nome}: faltam as faturas de {m}. Envie em {_url_portal()}")
         enviar_sms(e.telefone, texto)
     else:
         enviar_email(e.email, f"Faturas de {MESES[mes.month - 1]} em falta", "Faturas em falta", [texto])

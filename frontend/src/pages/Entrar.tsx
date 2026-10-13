@@ -40,7 +40,7 @@ export default function Entrar() {
           <Aviso tipo="info">Tem sessão iniciada no portal como {eu.utilizador.nome}. Ao entrar como contabilista, essa sessão termina. <Link to="/portal/inicio">Voltar ao portal</Link></Aviso>
         )}
         <div>
-          <h1 className="form__titulo">Bem-vindo de volta</h1>
+          <h1 className="form__titulo">Olá de novo</h1>
           <p className="form__lead">Entre para ver as faturas dos seus clientes.</p>
         </div>
         {reposta && <Aviso tipo="info">Palavra-passe alterada. Já pode entrar.</Aviso>}

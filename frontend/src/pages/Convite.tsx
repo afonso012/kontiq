@@ -59,7 +59,7 @@ export default function Convite() {
             <span className="pf-pill pf-pill--new">Convite</span>
             <h1 className="form__titulo" style={{ marginTop: 12 }}>Junte-se à <span className="pf-hl">equipa</span></h1>
             <p className="form__lead">
-              {c.convidado_por ? <><b className="ink">{c.convidado_por}</b> convidou-o</> : 'Foi convidado'} para o gabinete <b className="ink">{c.gabinete}</b> como <b className="ink">{c.papel.toLowerCase()}</b>.
+              {c.convidado_por ? <><b className="ink">{c.convidado_por}</b> enviou-lhe um convite</> : 'Tem um convite'} para o gabinete <b className="ink">{c.gabinete}</b> como <b className="ink">{c.papel.toLowerCase()}</b>.
               {novo ? ' Crie a sua conta para começar.' : ' Já tem conta: confirme a palavra-passe para entrar no gabinete.'}
             </p>
           </div>
