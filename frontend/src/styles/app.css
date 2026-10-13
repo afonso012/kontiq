@@ -263,7 +263,7 @@ a.nav__item:hover { background: var(--surface-sunk); color: var(--ink); }
 .atencao { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
 .atencao .pf-alert { align-items: center; }
 .atencao__texto { flex: 1; min-width: 0; }
-.tabela-caixa { overflow-x: auto; }
+.tabela-caixa { overflow-x: auto; position: relative; } /* relative: o texto só para leitores de ecrã fica dentro da caixa */
 .tabela-empresas { min-width: 900px; }
 .tabela-empresas td { font-size: 15px; }
 .link-empresa { appearance: none; background: none; border: 0; padding: 0; font: 600 15px/1.4 var(--font-sans); color: var(--ink); cursor: pointer; text-align: left; }
@@ -519,7 +519,7 @@ a.pf-btn { text-decoration: none; }
 .iva-campos__n { display: inline-grid; place-items: center; width: 36px; height: 28px; border-radius: 8px; background: var(--surface-sunk); font-size: 13px; }
 .iva-campos__total { font-weight: 500; font-size: 17px !important; }
 .iva-stats { grid-template-columns: 1fr; }
-.iva-tabelas { display: grid; gap: 24px; }
+.iva-tabelas { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
 @media (max-width: 1100px) { .iva-topo { grid-template-columns: 1fr; } }
 
 /* Instalar no telemóvel */

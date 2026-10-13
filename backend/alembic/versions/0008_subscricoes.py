@@ -14,7 +14,7 @@ depends_on = None
 
 def upgrade() -> None:
     op.add_column("subscricoes", sa.Column("ciclo", sa.String(10), server_default="mensal", nullable=False))
-    op.create_check_constraint("ck_subscricoes_ciclo", "subscricoes", "ciclo IN ('mensal', 'anual')")
+    op.create_check_constraint("ciclo", "subscricoes", "ciclo IN ('mensal', 'anual')")
     op.add_column("subscricoes", sa.Column("cancelar_no_fim", sa.Boolean(), server_default=sa.text("false"), nullable=False))
     op.create_table(
         "pagamentos_subscricao",
@@ -33,8 +33,8 @@ def upgrade() -> None:
         sa.Column("criado_em", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column("pago_em", sa.DateTime(timezone=True)),
         sa.PrimaryKeyConstraint("id"),
-        sa.CheckConstraint("estado IN ('pendente', 'pago', 'falhado', 'anulado')", name="ck_pagamentos_estado"),
-        sa.CheckConstraint("ciclo IN ('mensal', 'anual')", name="ck_pagamentos_ciclo"),
+        sa.CheckConstraint("estado IN ('pendente', 'pago', 'falhado', 'anulado')", name="estado"),
+        sa.CheckConstraint("ciclo IN ('mensal', 'anual')", name="ciclo"),
     )
     op.create_index("ix_pagamentos_subscricao_gabinete_id", "pagamentos_subscricao", ["gabinete_id"])
     op.execute("""

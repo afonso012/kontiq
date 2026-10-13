@@ -15,10 +15,10 @@ depends_on = None
 def upgrade() -> None:
     # Quem escreveu: o gabinete ou o cliente (pelo portal).
     op.add_column("comentarios", sa.Column("lado", sa.String(10), server_default="gabinete", nullable=False))
-    op.create_check_constraint("ck_comentarios_lado", "comentarios", "lado IN ('gabinete', 'cliente')")
+    op.create_check_constraint("lado", "comentarios", "lado IN ('gabinete', 'cliente')")
     # pergunta: o gabinete espera resposta · resposta: o cliente respondeu e o gabinete ainda não viu/fechou.
     op.add_column("faturas", sa.Column("duvida", sa.String(10), nullable=True))
-    op.create_check_constraint("ck_faturas_duvida", "faturas", "duvida IS NULL OR duvida IN ('pergunta', 'resposta')")
+    op.create_check_constraint("duvida", "faturas", "duvida IS NULL OR duvida IN ('pergunta', 'resposta')")
 
 
 def downgrade() -> None:

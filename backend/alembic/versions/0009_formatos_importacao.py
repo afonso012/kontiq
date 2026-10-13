@@ -23,7 +23,7 @@ def _lista(xs):
 def upgrade() -> None:
     op.add_column("gabinetes", sa.Column("config_exportacao", JSONB(), server_default=sa.text("'{}'::jsonb"), nullable=False))
     op.drop_constraint("ck_exportacoes_formato", "exportacoes")
-    op.create_check_constraint("ck_exportacoes_formato", "exportacoes", f"formato IN ({_lista(FORMATOS)})")
+    op.create_check_constraint("formato", "exportacoes", f"formato IN ({_lista(FORMATOS)})")
     op.create_table(
         "modelos_exportacao",
         sa.Column("id", sa.UUID(), server_default=sa.text("gen_random_uuid()"), nullable=False),
@@ -38,7 +38,7 @@ def upgrade() -> None:
         sa.Column("criado_por", sa.UUID(), sa.ForeignKey("utilizadores.id", ondelete="SET NULL")),
         sa.Column("criado_em", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
-        sa.CheckConstraint("programa IN ('toconline', 'primavera', 'phc', 'sage', 'outro')", name="ck_modelos_exportacao_programa"),
+        sa.CheckConstraint("programa IN ('toconline', 'primavera', 'phc', 'sage', 'outro')", name="programa"),
     )
     op.create_index("ix_modelos_exportacao_gabinete_id", "modelos_exportacao", ["gabinete_id"])
     op.execute("ALTER TABLE modelos_exportacao ENABLE ROW LEVEL SECURITY")
@@ -56,5 +56,7 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_table("modelos_exportacao")
     op.drop_constraint("ck_exportacoes_formato", "exportacoes")
-    op.create_check_constraint("ck_exportacoes_formato", "exportacoes", f"formato IN ({_lista(FORMATOS_ANTES)})")
+    # Os formatos novos são folhas de cálculo: ficam no histórico como xlsx.
+    op.execute("UPDATE exportacoes SET formato = 'xlsx' WHERE formato IN ('lancamentos', 'modelo')")
+    op.create_check_constraint("formato", "exportacoes", f"formato IN ({_lista(FORMATOS_ANTES)})")
     op.drop_column("gabinetes", "config_exportacao")

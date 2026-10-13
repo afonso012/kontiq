@@ -96,6 +96,7 @@ class ModeloExportacao(ComId, Base):
     """Modelo de importação de um programa de contabilidade, carregado pelo gabinete, com o mapeamento das colunas."""
 
     __tablename__ = "modelos_exportacao"
+    __table_args__ = (CheckConstraint(f"programa IN ({opcoes(*E.PROGRAMAS_CONTABILIDADE)})", name="programa"),)
 
     gabinete_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("gabinetes.id", ondelete="CASCADE"), index=True)
     nome: Mapped[str] = mapped_column(String(80))
@@ -113,6 +114,7 @@ class LinhaEfatura(ComId, Base):
     """Uma fatura de aquisição como aparece no e-Fatura (importada do CSV do Portal das Finanças)."""
 
     __tablename__ = "efatura_linhas"
+    __table_args__ = (Index("ix_efatura_linhas_empresa_periodo", "empresa_id", "periodo"),)
 
     gabinete_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("gabinetes.id", ondelete="CASCADE"))
     empresa_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("empresas.id", ondelete="CASCADE"))

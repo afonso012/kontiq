@@ -192,7 +192,7 @@ function ResumoSemanal({ avisar }: { avisar: (m: string, t?: 'ok' | 'bad') => vo
         <input type="checkbox" role="switch" checked={r.ativo} onChange={(e) => mudar(e.target.checked)} />
         <span className="interruptor__pista" aria-hidden="true"><span /></span>
       </label>
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ flex: '1 1 220px', minWidth: 0 }}>
         <div className="forte15">Resumo semanal por email</div>
         <div className="muted14">À segunda-feira: respostas dos clientes, faturas por conferir, quem ainda não enviou e o que falta do e-Fatura.{r.enviado_em ? ` Último envio ${quando(r.enviado_em).toLowerCase()}.` : ''}</div>
       </div>

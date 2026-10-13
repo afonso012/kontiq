@@ -126,3 +126,14 @@ def test_app_nao_apaga_registo_atividade(fabricas):
         with app() as s, s.begin():
             definir_gabinete(s, uuid.uuid4())
             s.execute(text("DELETE FROM registo_atividade"))
+
+
+def test_nomes_de_restricoes_sem_prefixo_repetido(fabricas):
+    """Uma restrição com o prefixo repetido (ck_tabela_ck_tabela_...) impede desfazer migrações."""
+    dono = create_engine(os.environ.get("MIGRATIONS_DATABASE_URL") or os.environ["DATABASE_URL"])
+    with dono.connect() as c:
+        repetidos = c.execute(text(
+            "SELECT conname FROM pg_constraint WHERE conname ~ '^(ck|uq|fk|pk|ix)_[a-z_]+_(ck|uq|fk|pk|ix)_'"
+        )).scalars().all()
+    dono.dispose()
+    assert repetidos == []
