@@ -23,7 +23,7 @@ testes e abre a API em http://localhost:8000/docs.
 **Passo a passo (alternativa):**
 
 ```bash
-cd ~/Projetos/faturas-em-dia
+git clone https://github.com/afonso012/kontiq.git && cd kontiq
 cp .env.example .env
 
 # 1. Base de dados e armazenamento
