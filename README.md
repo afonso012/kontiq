@@ -68,5 +68,5 @@ Para mexer no frontend com recarregamento automático: `cd frontend && npm run d
   dados base SNC, validação de NIF e leitura do QR da AT.
 - **Autenticação:** registo do gabinete em 3 passos, confirmação do email por código, entrar e
   sair, repor a palavra-passe, portal do cliente sem palavra-passe (código por SMS ou email),
-  sessões por cookie httpOnly, limites contra tentativas repetidas. 35 testes a passar.
+  sessões por cookie httpOnly, limites contra tentativas repetidas. 83 testes a passar.
 - Próximo passo: painel de clientes (ver [roadmap](docs/04-roadmap.md)).
