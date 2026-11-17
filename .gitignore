@@ -13,3 +13,4 @@ scripts/diagnostico.txt
 node_modules/
 frontend/dist/
 dados/
+frontend/tsconfig.tsbuildinfo
